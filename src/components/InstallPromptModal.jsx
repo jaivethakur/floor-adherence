@@ -66,7 +66,7 @@ export default function InstallPromptModal({ isOpen, onClose }) {
               <CheckCircle2 className="w-6 h-6 flex-shrink-0" />
               <div>
                 <p className="text-sm font-semibold">App Already Installed</p>
-                <p className="text-xs text-emerald-300/80">You are already running CatchAbit Floor Hours as a standalone app.</p>
+                <p className="text-xs text-emerald-300/80">You are already running Floor Adherence as a standalone app.</p>
               </div>
             </div>
           ) : isIOS ? (

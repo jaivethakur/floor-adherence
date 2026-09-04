@@ -141,7 +141,29 @@ class ApiService {
     const body = options.body ? JSON.parse(options.body) : {};
     const db = getMockDB();
 
-    // 1. Auth: Login
+    // 1. Auth: Register / Sign Up
+    if (path.endsWith('/api/auth/register') && method === 'POST') {
+      const { name, email, password } = body;
+      if (!name || !email || !password) throw new Error('Name, email, and password are required');
+      const cleanEmail = email.toLowerCase().trim();
+      let user = db.users.find(u => u.email.toLowerCase() === cleanEmail);
+      if (user) throw new Error('An account with this email already exists');
+
+      user = {
+        id: 'usr_' + Date.now().toString(36),
+        name: name.trim(),
+        email: cleanEmail,
+      };
+      db.users.push(user);
+      saveMockDB(db);
+
+      const mockToken = 'mock_jwt_' + user.id;
+      this.setToken(mockToken);
+      localStorage.setItem('ca_current_user', JSON.stringify(user));
+      return { message: 'Account created successfully', token: mockToken, user };
+    }
+
+    // 2. Auth: Login
     if (path.endsWith('/api/auth/login') && method === 'POST') {
       const { email } = body;
       const cleanEmail = (email || '').toLowerCase().trim();
@@ -157,14 +179,14 @@ class ApiService {
       return { message: 'Login successful', token: mockToken, user };
     }
 
-    // 2. Auth: Me
+    // 3. Auth: Me
     if (path.endsWith('/api/auth/me')) {
       const rawUser = localStorage.getItem('ca_current_user');
       if (rawUser) return { user: JSON.parse(rawUser) };
       throw new Error('Not authenticated');
     }
 
-    // 3. Auth: Logout
+    // 4. Auth: Logout
     if (path.endsWith('/api/auth/logout')) {
       this.setToken(null);
       localStorage.removeItem('ca_current_user');
@@ -181,12 +203,14 @@ class ApiService {
       let session = db.sessions.find(s => s.user_id === currentUser.id && s.work_date === todayIST);
       const breaks = session ? db.breaks.filter(b => b.session_id === session.id) : [];
       const isLeave = session?.work_mode === 'leave' || session?.status === 'leave';
+      const isWFH = session?.work_mode === 'wfh';
 
       let floorSeconds = 0;
       let breakSeconds = 0;
       let grossSeconds = 0;
 
-      if (session && !isLeave) {
+      // Do not count time for WFH & Leave - Floor Adherence only counts Office Floor time!
+      if (session && !isLeave && !isWFH) {
         const inMs = new Date(session.check_in_time).getTime();
         const outMs = session.check_out_time ? new Date(session.check_out_time).getTime() : Date.now();
         grossSeconds = Math.max(0, Math.floor((outMs - inMs) / 1000));
@@ -295,6 +319,41 @@ class ApiService {
       return { message: 'Marked as leave', session };
     }
 
+    // 6b. Attendance: Mark WFH
+    if (path.endsWith('/api/attendance/mark-wfh') && method === 'POST') {
+      const { date, action } = body;
+      const targetDate = date || todayIST;
+      let session = db.sessions.find(s => s.user_id === currentUser.id && s.work_date === targetDate);
+
+      if (action === 'unmark') {
+        if (session && session.work_mode === 'wfh') {
+          db.sessions = db.sessions.filter(s => s.id !== session.id);
+          saveMockDB(db);
+        }
+        return { message: 'WFH removed' };
+      }
+
+      if (session) {
+        session.work_mode = 'wfh';
+        session.status = 'completed';
+      } else {
+        session = {
+          id: 'sess_wfh_' + Date.now().toString(36),
+          user_id: currentUser.id,
+          work_date: targetDate,
+          work_mode: 'wfh',
+          status: 'completed',
+          check_in_time: new Date().toISOString(),
+          check_out_time: new Date().toISOString(),
+          is_auto_checkout: 0,
+        };
+        db.sessions.push(session);
+      }
+
+      saveMockDB(db);
+      return { message: 'Marked as WFH. WFH hours do not count toward Floor Adherence.', session };
+    }
+
     // 7. Attendance: Direct Edit
     if (path.endsWith('/api/attendance/direct-edit') && method === 'POST') {
       const { sessionId, fieldChanged, breakId, newValue, reason } = body;
@@ -360,7 +419,7 @@ class ApiService {
 
     // 10. Month History
     if (path.endsWith('/api/attendance/month')) {
-      const targetUserId = url.searchParams.get('userId') || currentUser.id;
+      const targetUserId = currentUser.id; // Strictly individual
       const year = parseInt(url.searchParams.get('year')) || 2026;
       const month = parseInt(url.searchParams.get('month')) || 9;
       const targetHours = db.settings.daily_target_hours || 7;
@@ -373,6 +432,8 @@ class ApiService {
       let leaveDaysElapsed = 0;
       let leaveDaysFuture = 0;
       let remainingCalendarWorkingDays = 0;
+      let officeDaysCount = 0;
+      let wfhDaysCount = 0;
 
       for (let d = 1; d <= daysInMonth; d++) {
         const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -393,17 +454,22 @@ class ApiService {
 
         const session = db.sessions.find(s => s.user_id === targetUserId && s.work_date === dateStr);
         const isLeave = session?.work_mode === 'leave' || session?.status === 'leave';
+        const isWFH = session?.work_mode === 'wfh';
 
         if (isLeave) {
           if ((isPast || isToday) && isWorking) leaveDaysElapsed++;
           if (isFuture && isWorking) leaveDaysFuture++;
+        } else if (session) {
+          if (isWFH) wfhDaysCount++;
+          else officeDaysCount++;
         }
 
         let floorSec = 0;
         let breakSec = 0;
-        let statusType = isLeave ? 'leave' : (isWorking ? (isPast ? 'absent' : (isToday ? 'today_pending' : 'scheduled')) : 'off');
+        let statusType = isLeave ? 'leave' : (isWFH ? 'wfh' : (isWorking ? (isPast ? 'absent' : (isToday ? 'today_pending' : 'scheduled')) : 'off'));
 
-        if (session && !isLeave) {
+        // Do not count time for WFH & Leave - Floor Adherence only counts Office Floor time!
+        if (session && !isLeave && !isWFH) {
           const brks = db.breaks.filter(b => b.session_id === session.id);
           const inMs = new Date(session.check_in_time).getTime();
           const outMs = session.check_out_time ? new Date(session.check_out_time).getTime() : Date.now();
@@ -479,6 +545,8 @@ class ApiService {
           effectiveRemainingWorkingDays,
           leaveDaysElapsed,
           totalLeaveDays: leaveDaysElapsed + leaveDaysFuture,
+          officeDaysCount,
+          wfhDaysCount,
           totalFloorHours,
           monthlyAverage,
           targetHoursSoFar,

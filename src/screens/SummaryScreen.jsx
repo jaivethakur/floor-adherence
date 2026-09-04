@@ -43,8 +43,8 @@ export default function SummaryScreen() {
   return (
     <div className="space-y-4 animate-fade-in pb-12 text-xs">
       <div>
-        <h2 className="font-heading font-extrabold text-xl text-white">Monthly Summary</h2>
-        <p className="text-slate-400">Average & Shortfall (Leaves Excluded from Quota)</p>
+        <h2 className="font-heading font-extrabold text-xl text-white">Floor Adherence Summary</h2>
+        <p className="text-slate-400">Office Floor Hours Only • WFH & Leaves Do Not Add Time</p>
       </div>
 
       {/* Main Compliance Banner */}
@@ -59,13 +59,13 @@ export default function SummaryScreen() {
           <div className="flex items-start justify-between">
             <div>
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-300">
-                Monthly Average
+                Floor Average
               </span>
               <div className="flex items-baseline space-x-2 mt-1">
                 <span className="font-heading font-black text-3xl sm:text-4xl text-white tabular-nums">
                   {metrics.monthlyAverage}h
                 </span>
-                <span className="text-slate-400 text-sm font-medium">/ 7.00h target</span>
+                <span className="text-slate-400 text-sm font-medium">/ 7.00h floor target</span>
               </div>
             </div>
 
@@ -84,7 +84,7 @@ export default function SummaryScreen() {
                 <Flame className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                 <span>
                   You're on track! You are{' '}
-                  <strong className="text-white font-mono">{metrics.surplusHours} hours</strong> ahead of target.
+                  <strong className="text-white font-mono">{metrics.surplusHours} hours</strong> ahead of floor target.
                 </span>
               </div>
             ) : (
@@ -97,11 +97,9 @@ export default function SummaryScreen() {
                     {metrics.effectiveWorkingDaysElapsed} working days.
                   </span>
                 </div>
-                {metrics.leaveDaysElapsed > 0 && (
-                  <p className="text-slate-400 text-[11px]">
-                    Note: {metrics.leaveDaysElapsed} day(s) on leave were excluded from your required target.
-                  </p>
-                )}
+                <p className="text-slate-400 text-[11px]">
+                  Note: Leaves are excluded from target quota. WFH counts 0 hours towards floor adherence.
+                </p>
               </div>
             )}
           </div>

@@ -1,7 +1,7 @@
 {
-  "name": "CatchAbit Floor Hours",
-  "short_name": "Floor Hours",
-  "description": "Floor Hours and Attendance Tracker for CatchAbit Solutions",
+  "name": "Floor Adherence",
+  "short_name": "Floor Adherence",
+  "description": "Floor Adherence — Personal Floor Time & Office Attendance Tracker",
   "start_url": "/",
   "id": "/",
   "display": "standalone",

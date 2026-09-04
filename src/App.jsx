@@ -8,7 +8,6 @@ import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen';
 import HistoryScreen from './screens/HistoryScreen';
 import SummaryScreen from './screens/SummaryScreen';
-import TeamScreen from './screens/TeamScreen';
 import SettingsScreen from './screens/SettingsScreen';
 
 function MainLayout() {
@@ -22,7 +21,7 @@ function MainLayout() {
         <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center animate-pulse">
           <div className="w-6 h-6 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
         </div>
-        <p className="text-xs font-heading font-medium tracking-wide">Loading Floor Hours...</p>
+        <p className="text-xs font-heading font-medium tracking-wide">Loading Floor Adherence...</p>
       </div>
     );
   }
@@ -44,7 +43,6 @@ function MainLayout() {
           )}
           {activeTab === 'history' && <HistoryScreen />}
           {activeTab === 'summary' && <SummaryScreen />}
-          {activeTab === 'team' && <TeamScreen />}
           {activeTab === 'settings' && <SettingsScreen />}
         </main>
 

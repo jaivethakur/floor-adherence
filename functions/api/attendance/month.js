@@ -14,7 +14,8 @@ export async function onRequestGet(context) {
 
   const year = parseInt(url.searchParams.get('year')) || currentYear;
   const month = parseInt(url.searchParams.get('month')) || currentMonth;
-  const targetUserId = url.searchParams.get('userId') || user.id;
+  // Strictly individual - each user only sees their own attendance data
+  const targetUserId = user.id;
 
   try {
     if (!env.DB) {
@@ -122,20 +123,30 @@ export async function onRequestGet(context) {
         : { floorSeconds: 0, breakSeconds: 0, grossSeconds: 0 };
 
       const isLeave = session?.work_mode === 'leave' || session?.status === 'leave';
+      const isWFH = session?.work_mode === 'wfh';
+
+      // "Do not count time for WFH & Leave" - Floor Adherence only counts Office Floor time!
+      const floorSeconds = (isLeave || isWFH) ? 0 : stats.floorSeconds;
+      const floorHours = (isLeave || isWFH) ? 0 : Math.round((floorSeconds / 3600) * 100) / 100;
+
       if (isLeave) {
         if (isElapsed && working) leaveDaysElapsed++;
         if (isFuture && working) leaveDaysFuture++;
       } else if (session) {
-        totalFloorSeconds += stats.floorSeconds;
-        if (session.work_mode === 'wfh') wfhDaysCount++;
-        else officeDaysCount++;
+        if (isWFH) {
+          wfhDaysCount++;
+        } else {
+          totalFloorSeconds += floorSeconds;
+          officeDaysCount++;
+        }
       }
 
-      const floorHours = Math.round((stats.floorSeconds / 3600) * 100) / 100;
       let statusType = 'off';
 
       if (isLeave) {
         statusType = 'leave';
+      } else if (isWFH) {
+        statusType = 'wfh';
       } else if (working) {
         if (session) {
           if (session.status === 'completed') {
@@ -171,7 +182,7 @@ export async function onRequestGet(context) {
         leaveReason: session?.leave_reason || null,
         session,
         breaksCount: breaks.length,
-        floorSeconds: stats.floorSeconds,
+        floorSeconds,
         breakSeconds: stats.breakSeconds,
         floorHours,
         targetHours: working && !isLeave ? dailyTargetHours : 0,

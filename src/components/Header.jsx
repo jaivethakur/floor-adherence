@@ -37,7 +37,7 @@ export default function Header({ onOpenInstallModal }) {
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="font-heading font-bold text-sm tracking-tight text-white">Floor Hours</span>
+              <span className="font-heading font-bold text-sm tracking-tight text-white">Floor Adherence</span>
               <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                 IST
               </span>

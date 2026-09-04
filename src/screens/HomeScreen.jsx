@@ -34,6 +34,8 @@ export default function HomeScreen({ onNavigateHistory }) {
     resumeBreak,
     markLeave,
     unmarkLeave,
+    markWFH,
+    unmarkWFH,
   } = useAttendance();
 
   const [selectedMode, setSelectedMode] = useState('office'); // 'office' | 'wfh' | 'leave'
@@ -45,7 +47,7 @@ export default function HomeScreen({ onNavigateHistory }) {
   const breaks = todayData?.breaks || [];
   const isLeave = todayData?.isLeave || false;
   const workMode = todayData?.workMode || 'office';
-  const status = isLeave ? 'leave' : (session ? session.status : 'not_checked_in');
+  const status = isLeave ? 'leave' : (workMode === 'wfh' ? 'wfh' : (session ? session.status : 'not_checked_in'));
   const isAutoCheckout = Boolean(session?.is_auto_checkout);
 
   const formatISTTime = (iso) => {
@@ -53,11 +55,19 @@ export default function HomeScreen({ onNavigateHistory }) {
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const handleModeSwitch = (mode) => {
+  const handleModeSwitch = async (mode) => {
     if (mode === 'leave') {
       setLeaveModalOpen(true);
-    } else {
-      setSelectedMode(mode);
+    } else if (mode === 'wfh') {
+      try {
+        await markWFH();
+      } catch (e) {}
+    } else if (mode === 'office') {
+      try {
+        if (workMode === 'wfh') await unmarkWFH();
+        if (isLeave) await unmarkLeave();
+        setSelectedMode('office');
+      } catch (e) {}
     }
   };
 
@@ -77,7 +87,7 @@ export default function HomeScreen({ onNavigateHistory }) {
             Hi, {user?.name?.split(' ')[0]} 👋
           </h2>
           <p className="text-slate-400">
-            {todayData?.workDate} • Daily Floor & Hours Tracker
+            {todayData?.workDate} • Daily Floor Adherence
           </p>
         </div>
         <button
@@ -102,9 +112,8 @@ export default function HomeScreen({ onNavigateHistory }) {
         <button
           type="button"
           onClick={() => handleModeSwitch('office')}
-          disabled={isLeave}
           className={`py-2 px-2 rounded-xl font-semibold flex items-center justify-center space-x-1.5 transition-all ${
-            !isLeave && (session?.work_mode === 'office' || (!session && selectedMode === 'office'))
+            !isLeave && workMode === 'office'
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
               : 'text-slate-400 hover:text-slate-200'
           }`}
@@ -116,10 +125,9 @@ export default function HomeScreen({ onNavigateHistory }) {
         <button
           type="button"
           onClick={() => handleModeSwitch('wfh')}
-          disabled={isLeave}
           className={`py-2 px-2 rounded-xl font-semibold flex items-center justify-center space-x-1.5 transition-all ${
-            !isLeave && (session?.work_mode === 'wfh' || (!session && selectedMode === 'wfh'))
-              ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+            !isLeave && workMode === 'wfh'
+              ? 'bg-sky-600 text-white shadow-md shadow-sky-600/30'
               : 'text-slate-400 hover:text-slate-200'
           }`}
         >
@@ -154,7 +162,7 @@ export default function HomeScreen({ onNavigateHistory }) {
             Reason: <strong className="text-white">"{todayData?.leaveReason || 'Personal Leave'}"</strong>
           </p>
           <div className="p-3 bg-slate-900/60 rounded-2xl border border-slate-800 text-[11px] text-slate-300">
-            ✨ This day is completely <strong>excluded from your 7-hour quota</strong> so your monthly average won't drop!
+            ✨ This day is completely <strong>excluded from your 7-hour floor quota</strong> so your monthly average won't drop!
           </div>
 
           <button
@@ -162,7 +170,30 @@ export default function HomeScreen({ onNavigateHistory }) {
             disabled={actionLoading}
             className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 active-scale transition-colors"
           >
-            Cancel Leave (Switch to Working)
+            Cancel Leave (Switch to Office Floor)
+          </button>
+        </div>
+      ) : workMode === 'wfh' ? (
+        <div className="p-6 bg-sky-500/10 border border-sky-500/20 rounded-3xl text-center space-y-3 shadow-xl">
+          <div className="w-14 h-14 rounded-2xl bg-sky-500/20 text-sky-400 mx-auto flex items-center justify-center">
+            <Home className="w-8 h-8" />
+          </div>
+          <h3 className="font-heading font-extrabold text-lg text-white">
+            Working From Home Today
+          </h3>
+          <p className="text-slate-300 text-xs">
+            Work Mode: <strong className="text-white">Remote (WFH)</strong>
+          </p>
+          <div className="p-3 bg-slate-900/60 rounded-2xl border border-slate-800 text-[11px] text-slate-300">
+            ℹ️ As per Floor Adherence policy, <strong>0 Floor Hours are counted</strong> for WFH.
+          </div>
+
+          <button
+            onClick={() => handleModeSwitch('office')}
+            disabled={actionLoading}
+            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 active-scale transition-colors"
+          >
+            Switch to Office Floor
           </button>
         </div>
       ) : (

@@ -32,6 +32,11 @@ export function calculateSessionSeconds(session, breaks = [], now = new Date()) 
     return { floorSeconds: 0, breakSeconds: 0, grossSeconds: 0 };
   }
 
+  // "Do not count time for WFH & Leave" - Floor Adherence only counts Office Floor time!
+  if (session.work_mode === 'wfh' || session.work_mode === 'leave') {
+    return { floorSeconds: 0, breakSeconds: 0, grossSeconds: 0 };
+  }
+
   const checkIn = new Date(session.check_in_time).getTime();
   const checkOut = session.check_out_time ? new Date(session.check_out_time).getTime() : now.getTime();
   const grossMs = Math.max(0, checkOut - checkIn);

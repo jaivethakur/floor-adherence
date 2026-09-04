@@ -34,14 +34,14 @@ export function AttendanceProvider({ children }) {
     fetchToday();
   }, [fetchToday]);
 
-  // Live timer tick when active or on_break and NOT on leave
+  // Live timer tick when active or on_break and NOT on leave or WFH
   useEffect(() => {
     if (!todayData?.session) return;
     const session = todayData.session;
 
-    if (todayData.isLeave || session.status === 'leave' || session.status === 'completed') {
+    if (todayData.isLeave || session.status === 'leave' || session.status === 'completed' || session.work_mode === 'wfh') {
       if (todayData.stats) {
-        setLiveFloorSeconds(todayData.stats.floorSeconds);
+        setLiveFloorSeconds(session.work_mode === 'wfh' || todayData.isLeave ? 0 : todayData.stats.floorSeconds);
         setLiveBreakSeconds(todayData.stats.breakSeconds);
       }
       return;
@@ -162,6 +162,40 @@ export function AttendanceProvider({ children }) {
     }
   };
 
+  const markWFH = async (date = null) => {
+    setActionLoading(true);
+    setError(null);
+    try {
+      await api.request('/api/attendance/mark-wfh', {
+        method: 'POST',
+        body: JSON.stringify({ date }),
+      });
+      await fetchToday();
+    } catch (err) {
+      setError(err.message || 'Failed to mark WFH');
+      throw err;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const unmarkWFH = async (date = null) => {
+    setActionLoading(true);
+    setError(null);
+    try {
+      await api.request('/api/attendance/mark-wfh', {
+        method: 'POST',
+        body: JSON.stringify({ action: 'unmark', date }),
+      });
+      await fetchToday();
+    } catch (err) {
+      setError(err.message || 'Failed to remove WFH');
+      throw err;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const directEdit = async (fieldChanged, breakId, newValue, reason) => {
     if (!todayData?.session?.id) throw new Error('No session to edit');
     setActionLoading(true);
@@ -195,8 +229,9 @@ export function AttendanceProvider({ children }) {
         error,
         liveFloorSeconds,
         liveBreakSeconds,
-        workMode: todayData?.workMode || 'office',
         isLeave: todayData?.isLeave || false,
+        isWFH: todayData?.workMode === 'wfh',
+        workMode: todayData?.workMode || 'office',
         leaveReason: todayData?.leaveReason || null,
         refreshToday: fetchToday,
         checkIn,
@@ -205,6 +240,8 @@ export function AttendanceProvider({ children }) {
         resumeBreak,
         markLeave,
         unmarkLeave,
+        markWFH,
+        unmarkWFH,
         directEdit,
       }}
     >

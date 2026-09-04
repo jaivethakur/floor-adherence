@@ -1,12 +1,11 @@
 import React from 'react';
-import { Clock, Calendar, BarChart3, Users, Sliders } from 'lucide-react';
+import { Clock, Calendar, BarChart3, Sliders } from 'lucide-react';
 
 export default function BottomNav({ activeTab, onChangeTab }) {
   const tabs = [
     { id: 'today', label: 'Today', icon: Clock },
     { id: 'history', label: 'History', icon: Calendar },
     { id: 'summary', label: 'Summary', icon: BarChart3 },
-    { id: 'team', label: 'Team', icon: Users },
     { id: 'settings', label: 'Settings', icon: Sliders },
   ];
 

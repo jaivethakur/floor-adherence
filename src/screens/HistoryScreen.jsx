@@ -62,6 +62,9 @@ export default function HistoryScreen() {
     if (day.statusType === 'leave') {
       return 'bg-amber-500/10 text-amber-300 border-amber-500/30';
     }
+    if (day.statusType === 'wfh' || day.workMode === 'wfh') {
+      return 'bg-sky-500/10 text-sky-300 border-sky-500/30';
+    }
     if (!day.isWorkingDay) {
       return 'bg-slate-900/40 text-slate-600 border-slate-800/40';
     }
@@ -205,6 +208,8 @@ export default function HistoryScreen() {
               <div className="w-full text-center">
                 {day.statusType === 'leave' ? (
                   <span className="text-[9px] text-amber-400 font-bold block">Leave</span>
+                ) : day.statusType === 'wfh' || day.workMode === 'wfh' ? (
+                  <span className="text-[9px] text-sky-400 font-bold block">WFH</span>
                 ) : day.isWorkingDay ? (
                   <span className="text-[10px] font-mono font-bold block tabular-nums">
                     {day.floorHours > 0 ? `${day.floorHours}h` : day.isFuture ? '-' : '0h'}

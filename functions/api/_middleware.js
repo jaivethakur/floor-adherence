@@ -73,6 +73,7 @@ export async function onRequest(context) {
   // Public Routes Bypass
   if (
     url.pathname.endsWith('/api/auth/login') ||
+    url.pathname.endsWith('/api/auth/register') ||
     url.pathname.endsWith('/api/health')
   ) {
     return await context.next();

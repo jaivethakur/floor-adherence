@@ -141,18 +141,22 @@ export default function DayDetailModal({ isOpen, onClose, dayData, onRefresh }) 
                 <div className="p-4 bg-slate-800/60 rounded-2xl border border-slate-700/60 flex items-center justify-between">
                   <div>
                     <span className="text-slate-400 block text-[11px]">
-                      {dayData.workMode === 'wfh' ? 'WFH Hours' : 'Floor Hours'}
+                      {dayData.workMode === 'wfh' ? 'Floor Hours (WFH = 0h)' : 'Floor Hours'}
                     </span>
                     <span className="font-heading font-bold text-2xl text-white tabular-nums">
                       {dayData.floorHours}h
                     </span>
                     <span className="text-slate-500 text-[11px] block">
-                      Target: {dayData.isWorkingDay ? '7.00h' : '0.00h'}
+                      Target: {dayData.isWorkingDay && dayData.statusType !== 'leave' ? '7.00h' : '0.00h'}
                     </span>
                   </div>
 
                   <div>
-                    {dayData.floorHours >= 7 ? (
+                    {dayData.workMode === 'wfh' ? (
+                      <div className="px-3 py-1.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 font-medium text-xs">
+                        WFH (0 Floor Hours)
+                      </div>
+                    ) : dayData.floorHours >= 7 ? (
                       <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
                         <CheckCircle2 className="w-4 h-4" />
                         <span>Target Met</span>

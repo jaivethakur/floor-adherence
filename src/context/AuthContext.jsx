@@ -46,6 +46,24 @@ export function AuthProvider({ children }) {
     }
   }
 
+  async function signup(name, email, password) {
+    setError(null);
+    try {
+      const res = await api.request('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, password }),
+      });
+      if (res.token) {
+        api.setToken(res.token);
+      }
+      setUser(res.user);
+      return res.user;
+    } catch (err) {
+      setError(err.message || 'Registration failed');
+      throw err;
+    }
+  }
+
   async function logout() {
     try {
       await api.request('/api/auth/logout', { method: 'POST' });
@@ -55,7 +73,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ user, loading, error, login, signup, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );
