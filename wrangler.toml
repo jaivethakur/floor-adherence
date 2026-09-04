@@ -1,0 +1,12 @@
+name = "catchabit-time"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-01-01"
+
+# Cloudflare D1 Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "catchabit-time-db"
+database_id = "c83b9ae8-e606-4422-9a2c-b8e5826bac68"
+
+[vars]
+JWT_SECRET = "catchabit_floor_hours_jwt_secret_token_key_2026"
