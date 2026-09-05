@@ -90,7 +90,7 @@ export default function HistoryScreen() {
   const emptyDaysLeading = Array.from({ length: firstDayOfMonth }, (_, i) => i);
 
   return (
-    <div className="space-y-4 animate-fade-in pb-12 text-xs">
+    <div className="space-y-4 animate-fade-in pb-32 text-xs">
       {/* Month Picker Header */}
       <div className="flex items-center justify-between glass-dock rounded-3xl p-3 border border-white/10 shadow-glass">
         <button

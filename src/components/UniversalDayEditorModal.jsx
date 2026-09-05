@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Clock,
@@ -280,13 +281,13 @@ export default function UniversalDayEditorModal({
   });
   const isWeekend = dayOfWeekName === 'Saturday' || dayOfWeekName === 'Sunday';
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in text-xs">
-      <div className="w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 shadow-2xl relative max-h-[92vh] flex flex-col">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-fade-in text-xs">
+      <div className="w-full max-w-lg bg-slate-900 border border-slate-700/80 rounded-3xl p-4 sm:p-5 shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between pb-3.5 border-b border-white/10">
+        <div className="flex-shrink-0 flex items-center justify-between pb-3 border-b border-white/10">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 flex-shrink-0">
               <Calendar className="w-5 h-5" />
             </div>
             <div>
@@ -312,14 +313,14 @@ export default function UniversalDayEditorModal({
         </div>
 
         {error && (
-          <div className="mt-3 p-3 bg-rose-500/15 border border-rose-500/30 rounded-2xl text-rose-300 text-xs flex items-center space-x-2">
+          <div className="flex-shrink-0 mt-2 p-3 bg-rose-500/15 border border-rose-500/30 rounded-2xl text-rose-300 text-xs flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-400" />
             <span>{error}</span>
           </div>
         )}
 
         {/* Scrollable Form Content */}
-        <div className="py-4 space-y-4 overflow-y-auto flex-1 pr-1">
+        <div className="py-3.5 space-y-3.5 overflow-y-auto flex-1 min-h-0 pr-1">
           {/* 3-Way Mode Segmented Pill */}
           <div>
             <label className="block text-slate-300 font-semibold mb-2">
@@ -573,14 +574,14 @@ export default function UniversalDayEditorModal({
           </div>
         </div>
 
-        {/* Footer Actions */}
-        <div className="pt-3.5 border-t border-white/10 flex items-center justify-between space-x-2">
+        {/* Footer Actions - Permanently pinned at bottom */}
+        <div className="flex-shrink-0 pt-3.5 border-t border-white/10 flex items-center justify-between space-x-2 bg-slate-900 z-10">
           {initialData?.session && (
             <button
               type="button"
               onClick={handleClearDay}
               disabled={submitting}
-              className="py-2.5 px-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30 flex items-center space-x-1 transition-all disabled:opacity-50"
+              className="py-2.5 px-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30 flex items-center space-x-1.5 transition-all disabled:opacity-50 text-xs"
               title="Wipe attendance for this date"
             >
               <Trash2 className="w-3.5 h-3.5 text-rose-400" />
@@ -593,7 +594,7 @@ export default function UniversalDayEditorModal({
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="py-2.5 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition-colors"
+              className="py-2.5 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition-colors text-xs"
             >
               Cancel
             </button>
@@ -602,7 +603,7 @@ export default function UniversalDayEditorModal({
               type="button"
               onClick={handleSave}
               disabled={submitting}
-              className="py-2.5 px-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold flex items-center space-x-1.5 shadow-lg shadow-indigo-600/40 transition-all disabled:opacity-50"
+              className="py-2.5 px-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold flex items-center space-x-1.5 shadow-lg shadow-indigo-600/40 transition-all disabled:opacity-50 text-xs"
             >
               <Check className="w-4 h-4" />
               <span>{submitting ? 'Saving...' : 'Apply to Day'}</span>
@@ -610,6 +611,7 @@ export default function UniversalDayEditorModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

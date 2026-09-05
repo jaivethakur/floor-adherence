@@ -68,8 +68,8 @@ export default function LiveTimer({
       />
 
       {/* Circular Holographic Timer Ring */}
-      <div className="relative w-56 h-56 flex items-center justify-center my-1">
-        <svg className="w-full h-full transform -rotate-90 filter drop-shadow-[0_0_15px_rgba(99,102,241,0.2)]" viewBox="0 0 200 200">
+      <div className="relative w-52 h-52 sm:w-56 sm:h-56 flex items-center justify-center my-1">
+        <svg className="w-full h-full transform -rotate-90 filter drop-shadow-[0_0_16px_rgba(99,102,241,0.25)]" viewBox="0 0 200 200">
           <defs>
             <linearGradient id="timerGradientIndigo" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#a5b4fc" />
@@ -99,7 +99,7 @@ export default function LiveTimer({
             cy="100"
             r={radius}
             className="text-white/5"
-            strokeWidth="14"
+            strokeWidth="12"
             stroke="currentColor"
             fill="transparent"
           />
@@ -109,8 +109,8 @@ export default function LiveTimer({
             cx="100"
             cy="100"
             r={radius}
-            className="text-slate-800/90"
-            strokeWidth="10"
+            className="text-slate-800/80"
+            strokeWidth="8"
             stroke="currentColor"
             fill="transparent"
           />
@@ -120,7 +120,7 @@ export default function LiveTimer({
             cx="100"
             cy="100"
             r={radius}
-            strokeWidth="10"
+            strokeWidth="8"
             strokeLinecap="round"
             stroke={
               status === 'on_break'
@@ -141,48 +141,48 @@ export default function LiveTimer({
         {/* Inner HUD Display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           {/* Status Badge */}
-          <div className="mb-2">
+          <div className="mb-1.5">
             {status === 'active' && (
-              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                 <span>ON FLOOR</span>
               </span>
             )}
             {status === 'on_break' && (
-              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
-                <Coffee className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
+              <span className="inline-flex items-center space-x-1 px-3 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
+                <Coffee className="w-3 h-3 text-amber-400 animate-bounce" />
                 <span>ON BREAK</span>
               </span>
             )}
             {status === 'completed' && (
-              <span className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
+              <span className={`inline-flex items-center space-x-1 px-3 py-0.5 rounded-full text-[10px] font-bold ${
                 isAutoCheckout
                   ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                   : 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/40'
               }`}>
-                {isAutoCheckout ? <AlertCircle className="w-3.5 h-3.5 text-rose-400" /> : <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
+                {isAutoCheckout ? <AlertCircle className="w-3 h-3 text-rose-400" /> : <CheckCircle2 className="w-3 h-3 text-emerald-400" />}
                 <span>{isAutoCheckout ? 'AUTO-CHECKED OUT' : 'CHECKED OUT'}</span>
               </span>
             )}
             {isWeekend && (
-              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm">
+              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm">
                 <span>🌴 WEEKEND</span>
               </span>
             )}
             {!isWeekend && status === 'wfh' && (
-              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[11px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">
-                <Home className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                <Home className="w-3 h-3" />
                 <span>WFH (EXEMPTED)</span>
               </span>
             )}
             {!isWeekend && status === 'leave' && (
-              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                <Palmtree className="w-3.5 h-3.5" />
+              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <Palmtree className="w-3 h-3" />
                 <span>LEAVE (EXEMPTED)</span>
               </span>
             )}
             {!isWeekend && status === 'not_checked_in' && (
-              <span className="inline-flex items-center space-x-1 px-3 py-0.5 rounded-full text-[11px] font-medium bg-white/5 text-slate-400 border border-white/10">
+              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-white/5 text-slate-400 border border-white/10">
                 <span>READY TO CHECK IN</span>
               </span>
             )}
@@ -198,55 +198,23 @@ export default function LiveTimer({
           <div className="text-[11px] text-slate-400 mt-1 font-medium flex items-center space-x-1">
             {hasZeroTarget ? (
               <span className="text-emerald-400/90 font-semibold">
-                {floorSeconds > 0 ? `+${totalHoursDecimal}h Bonus Adherence` : 'Quota Exempted (0.0h required)'}
+                {floorSeconds > 0 ? `+${totalHoursDecimal}h Bonus Floor Time` : '0.0h Required Today'}
               </span>
             ) : (
-              <span>{totalHoursDecimal}h / {(targetSeconds / 3600).toFixed(1)}h floor target</span>
+              <span>{totalHoursDecimal}h of {(targetSeconds / 3600).toFixed(1)}h floor goal</span>
             )}
           </div>
 
           {/* Percentage / Status Note */}
-          <div className={`text-xs font-bold mt-1 ${
+          <div className={`text-[11px] font-bold mt-0.5 ${
             hasZeroTarget
-              ? 'text-emerald-400 text-glow-emerald'
+              ? 'text-emerald-400'
               : isTargetMet
               ? 'text-emerald-400 text-glow-emerald'
               : 'text-indigo-300'
           }`}>
-            {hasZeroTarget ? '✓ Day Protected' : `${progressPercent}% completed`}
+            {hasZeroTarget ? '✓ Quota Exempted' : isTargetMet ? '✓ 7h Quota Met!' : `${progressPercent}% completed`}
           </div>
-        </div>
-      </div>
-
-      {/* Frosted Bottom Shelf: Breaks & Shortfall Matrix */}
-      <div className="w-full mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between text-xs px-2">
-        <div className="flex items-center space-x-1.5 text-slate-400">
-          <Coffee className="w-3.5 h-3.5 text-amber-400" />
-          <span>Breaks:</span>
-          <span className="font-mono text-slate-200 tabular-nums font-semibold">
-            {breakFormatted.hrs}h {breakFormatted.mins}m
-          </span>
-        </div>
-
-        <div>
-          {hasZeroTarget ? (
-            <span className="flex items-center text-emerald-400 font-bold space-x-1 text-glow-emerald">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{floorSeconds > 0 ? 'Bonus Logged!' : 'Quota Exempted'}</span>
-            </span>
-          ) : isTargetMet ? (
-            <span className="flex items-center text-emerald-400 font-bold space-x-1 text-glow-emerald">
-              <Flame className="w-4 h-4 text-emerald-400 animate-pulse" />
-              <span>Target Met!</span>
-            </span>
-          ) : (
-            <span className="text-slate-400">
-              Shortfall:{' '}
-              <span className="font-mono text-amber-400 tabular-nums font-bold">
-                {Math.max(0, 7 - parseFloat(totalHoursDecimal)).toFixed(2)}h
-              </span>
-            </span>
-          )}
         </div>
       </div>
     </div>

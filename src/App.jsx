@@ -52,7 +52,7 @@ function MainLayout() {
         </div>
 
         {/* Main Content View */}
-        <main className="relative z-10 flex-1 w-full max-w-md mx-auto px-4 pt-4">
+        <main className="relative flex-1 w-full max-w-md mx-auto px-4 pt-4">
           {activeTab === 'today' && (
             <HomeScreen
               onNavigateHistory={() => setActiveTab('history')}

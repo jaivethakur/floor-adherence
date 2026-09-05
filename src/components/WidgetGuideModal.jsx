@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Smartphone, Share, PlusSquare, MoreVertical, Sparkles, Zap, CheckCircle2 } from 'lucide-react';
 
 export default function WidgetGuideModal({ isOpen, onClose }) {
@@ -6,8 +7,8 @@ export default function WidgetGuideModal({ isOpen, onClose }) {
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div className="relative w-full max-w-md glass-panel-elevated rounded-3xl p-6 text-slate-100 border border-white/20 shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-white/10">
@@ -126,6 +127,7 @@ export default function WidgetGuideModal({ isOpen, onClose }) {
           Got It
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

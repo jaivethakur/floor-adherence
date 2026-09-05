@@ -109,7 +109,7 @@ export default function HomeScreen({ onNavigateHistory }) {
   const shortfallHours = Math.max(0, targetHours - parseFloat(floorHoursDecimal)).toFixed(2);
 
   return (
-    <div className="space-y-4 animate-fade-in pb-12 text-xs">
+    <div className="space-y-4 animate-fade-in pb-32 text-xs">
       {/* Top Welcome Bar */}
       <div className="flex items-center justify-between">
         <div>
@@ -118,7 +118,7 @@ export default function HomeScreen({ onNavigateHistory }) {
             <span className="inline-block animate-wave">👋</span>
           </h2>
           <div className="flex items-center space-x-2 text-slate-400 text-[11px] font-medium mt-0.5">
-            <span>{todayData?.workDate || 'Today'}</span>
+            <span className="text-slate-300">{todayData?.workDate || 'Today'}</span>
             <span>•</span>
             <span className={isWeekend ? 'text-amber-300 font-bold' : 'text-slate-300'}>
               {todayData?.dayOfWeek || 'Today'} {isWeekend && '🌴 Weekend'}
@@ -130,18 +130,18 @@ export default function HomeScreen({ onNavigateHistory }) {
           {/* Direct Edit Button */}
           <button
             onClick={() => setShowUniversalEditor(true)}
-            className="p-2.5 rounded-2xl glass-pill text-indigo-300 hover:text-white hover:bg-white/10 active-scale transition-all flex items-center space-x-1 border border-indigo-500/30 shadow-glass"
+            className="py-2 px-3 rounded-2xl glass-pill text-indigo-300 hover:text-white hover:bg-white/10 active-scale transition-all flex items-center space-x-1.5 border border-indigo-500/30 shadow-glass"
             title="Adjust / Log Hours"
           >
-            <Edit3 className="w-4 h-4 text-indigo-400" />
-            <span className="text-[11px] font-semibold hidden sm:inline">Adjust</span>
+            <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-[11px] font-semibold">Adjust</span>
           </button>
 
           {/* Refresh Button */}
           <button
             onClick={refreshToday}
             disabled={loading}
-            className="p-2.5 rounded-2xl glass-pill text-slate-400 hover:text-white active-scale transition-all border border-white/10 shadow-glass"
+            className="p-2 rounded-2xl glass-pill text-slate-400 hover:text-white active-scale transition-all border border-white/10 shadow-glass"
             title="Refresh Data"
           >
             <RotateCw className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
@@ -272,72 +272,72 @@ export default function HomeScreen({ onNavigateHistory }) {
             isAutoCheckout={isAutoCheckout}
           />
 
-          {/* 4-Card Frosted Glass Metric Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+          {/* Sleek 1-Row Frosted Telemetry Dock */}
+          <div className="grid grid-cols-4 gap-1.5 p-2 glass-panel border border-white/10 rounded-2xl shadow-glass text-center">
             {/* 1. Floor Time */}
-            <div className="p-3.5 glass-panel border border-white/10 rounded-2xl shadow-glass">
-              <span className="text-slate-400 text-[10px] block font-semibold uppercase tracking-wider">
-                Floor Time
+            <div className="p-2 rounded-xl bg-white/[0.03]">
+              <span className="text-slate-400 text-[9px] block font-semibold uppercase tracking-wider">
+                Floor
               </span>
-              <span className="font-heading font-black text-xl text-white font-mono tabular-nums">
+              <span className="font-heading font-black text-base sm:text-lg text-white font-mono tabular-nums">
                 {floorHoursDecimal}h
               </span>
-              <span className="text-[10px] text-indigo-300 block">
-                {Math.floor(liveFloorSeconds / 60)} mins
+              <span className="text-[9px] text-indigo-300 block font-medium">
+                {Math.floor(liveFloorSeconds / 60)}m
               </span>
             </div>
 
             {/* 2. Breaks */}
-            <div className="p-3.5 glass-panel border border-white/10 rounded-2xl shadow-glass">
-              <span className="text-slate-400 text-[10px] block font-semibold uppercase tracking-wider">
+            <div className="p-2 rounded-xl bg-white/[0.03]">
+              <span className="text-slate-400 text-[9px] block font-semibold uppercase tracking-wider">
                 Breaks
               </span>
-              <span className="font-heading font-black text-xl text-amber-400 font-mono tabular-nums">
+              <span className="font-heading font-black text-base sm:text-lg text-amber-400 font-mono tabular-nums">
                 {breakMinutes}m
               </span>
-              <span className="text-[10px] text-slate-400 block">
+              <span className="text-[9px] text-slate-400 block font-medium">
                 {breaks.length} logged
               </span>
             </div>
 
             {/* 3. Target Quota */}
-            <div className="p-3.5 glass-panel border border-white/10 rounded-2xl shadow-glass">
-              <span className="text-slate-400 text-[10px] block font-semibold uppercase tracking-wider">
-                Target Quota
+            <div className="p-2 rounded-xl bg-white/[0.03]">
+              <span className="text-slate-400 text-[9px] block font-semibold uppercase tracking-wider">
+                Target
               </span>
-              <span className="font-heading font-black text-xl text-sky-400 font-mono tabular-nums">
+              <span className="font-heading font-black text-base sm:text-lg text-sky-400 font-mono tabular-nums">
                 {targetHours.toFixed(1)}h
               </span>
-              <span className="text-[10px] text-slate-400 block">
-                {isWeekend ? 'Weekend Off' : 'Daily Goal'}
+              <span className="text-[9px] text-slate-400 block font-medium">
+                {isWeekend ? 'Exempt' : 'Goal'}
               </span>
             </div>
 
             {/* 4. Shortfall / Pace */}
-            <div className="p-3.5 glass-panel border border-white/10 rounded-2xl shadow-glass">
-              <span className="text-slate-400 text-[10px] block font-semibold uppercase tracking-wider">
-                {isWeekend ? 'Bonus Hours' : 'Shortfall'}
+            <div className="p-2 rounded-xl bg-white/[0.03]">
+              <span className="text-slate-400 text-[9px] block font-semibold uppercase tracking-wider">
+                {isWeekend ? 'Bonus' : 'Status'}
               </span>
               {isWeekend ? (
                 <>
-                  <span className="font-heading font-black text-xl text-emerald-400 font-mono tabular-nums">
+                  <span className="font-heading font-black text-base sm:text-lg text-emerald-400 font-mono tabular-nums">
                     +{floorHoursDecimal}h
                   </span>
-                  <span className="text-[10px] text-emerald-400/80 block">Bonus Work</span>
+                  <span className="text-[9px] text-emerald-400/80 block font-medium">Extra</span>
                 </>
               ) : parseFloat(shortfallHours) <= 0 ? (
                 <>
-                  <span className="font-heading font-black text-xl text-emerald-400 font-mono tabular-nums">
-                    0.00h
+                  <span className="font-heading font-black text-base sm:text-lg text-emerald-400 font-mono tabular-nums">
+                    0.0h
                   </span>
-                  <span className="text-[10px] text-emerald-400 block font-semibold">✓ Quota Met!</span>
+                  <span className="text-[9px] text-emerald-400 block font-semibold">✓ Met</span>
                 </>
               ) : (
                 <>
-                  <span className="font-heading font-black text-xl text-amber-400 font-mono tabular-nums">
+                  <span className="font-heading font-black text-base sm:text-lg text-amber-400 font-mono tabular-nums">
                     {shortfallHours}h
                   </span>
-                  <span className="text-[10px] text-amber-400/80 block">to reach 7h</span>
+                  <span className="text-[9px] text-amber-400/80 block font-medium">Short</span>
                 </>
               )}
             </div>
@@ -457,7 +457,7 @@ export default function HomeScreen({ onNavigateHistory }) {
                 className="w-full py-2.5 rounded-2xl glass-pill hover:bg-white/10 text-indigo-300 font-semibold text-xs transition-all flex items-center justify-center space-x-2 border border-indigo-500/30 active-scale"
               >
                 <Edit3 className="w-4 h-4 text-indigo-400" />
-                <span>✏️ Adjust / Log Floor Hours</span>
+                <span>Adjust / Log Floor Hours</span>
               </button>
             </div>
           </div>
