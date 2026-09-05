@@ -27,13 +27,13 @@ export function AttendanceProvider({ children }) {
         // Sync to Preferences for Android Widget
         const floorSec = res.stats.floorSeconds || 0;
         const breakSec = res.stats.breakSeconds || 0;
-        const targetSec = res.stats.targetSeconds || (7 * 3600);
+        const targetSec = res.stats.targetSeconds ?? (res.isExempted ? 0 : 7 * 3600);
         const floorH = (floorSec / 3600).toFixed(2);
         const breakH = (breakSec / 3600).toFixed(2);
         const targetH = (targetSec / 3600).toFixed(1);
         const shortfallH = Math.max(0, (targetSec - floorSec) / 3600).toFixed(2);
         const wMode = res.workMode || 'office';
-        const st = res.isLeave ? 'leave' : (wMode === 'wfh' ? 'wfh' : (res.session?.status || 'not_checked_in'));
+        const st = res.isLeave ? 'leave' : (wMode === 'wfh' ? 'wfh' : (res.isWeekend && !res.session ? 'weekend' : (res.session?.status || 'not_checked_in')));
 
         Preferences.set({ key: 'today_status', value: st }).catch(() => {});
         Preferences.set({ key: 'today_floor_hours', value: floorH }).catch(() => {});
@@ -52,13 +52,49 @@ export function AttendanceProvider({ children }) {
     }
   }, [user]);
 
+  // Initial fetch
   useEffect(() => {
     fetchToday();
   }, [fetchToday]);
 
+  // Auto-sync: listen to window focus, document visibility, and periodic 20s polling
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchToday();
+      }
+    };
+    const handleFocus = () => {
+      fetchToday();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('focus', handleFocus);
+
+    // 20-second active background poll
+    const pollInterval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetchToday();
+      }
+    }, 20000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(pollInterval);
+    };
+  }, [fetchToday]);
+
   // Live timer tick when active or on_break and NOT on leave or WFH
   useEffect(() => {
-    if (!todayData?.session) return;
+    if (!todayData?.session) {
+      if (todayData?.stats) {
+        setLiveFloorSeconds(todayData.stats.floorSeconds || 0);
+        setLiveBreakSeconds(todayData.stats.breakSeconds || 0);
+      }
+      return;
+    }
+
     const session = todayData.session;
 
     if (todayData.isLeave || session.status === 'leave' || session.status === 'completed' || session.work_mode === 'wfh') {
@@ -91,9 +127,31 @@ export function AttendanceProvider({ children }) {
     return () => clearInterval(interval);
   }, [todayData]);
 
+  // Optimistic Check-In
   const checkIn = async (mode = 'office') => {
     setActionLoading(true);
     setError(null);
+    const nowIso = new Date().toISOString();
+
+    // Optimistic UI state
+    setTodayData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        workMode: mode,
+        isLeave: false,
+        isWFH: mode === 'wfh',
+        session: {
+          id: prev.session?.id || ('optimistic_' + Date.now()),
+          work_date: prev.workDate,
+          work_mode: mode,
+          check_in_time: nowIso,
+          check_out_time: null,
+          status: 'active',
+        },
+      };
+    });
+
     try {
       await api.request('/api/attendance/check-in', {
         method: 'POST',
@@ -102,48 +160,89 @@ export function AttendanceProvider({ children }) {
       await fetchToday();
     } catch (err) {
       setError(err.message || 'Check-in failed');
+      await fetchToday();
       throw err;
     } finally {
       setActionLoading(false);
     }
   };
 
+  // Optimistic Check-Out
   const checkOut = async () => {
     setActionLoading(true);
     setError(null);
+    const nowIso = new Date().toISOString();
+
+    setTodayData(prev => {
+      if (!prev?.session) return prev;
+      return {
+        ...prev,
+        session: { ...prev.session, status: 'completed', check_out_time: nowIso },
+      };
+    });
+
     try {
       await api.request('/api/attendance/check-out', { method: 'POST' });
       await fetchToday();
     } catch (err) {
       setError(err.message || 'Check-out failed');
+      await fetchToday();
       throw err;
     } finally {
       setActionLoading(false);
     }
   };
 
+  // Optimistic Start Break
   const startBreak = async () => {
     setActionLoading(true);
     setError(null);
+    const nowIso = new Date().toISOString();
+
+    setTodayData(prev => {
+      if (!prev?.session) return prev;
+      const newBreaks = [...(prev.breaks || []), { id: 'temp_' + Date.now(), break_start: nowIso, break_end: null }];
+      return {
+        ...prev,
+        breaks: newBreaks,
+        session: { ...prev.session, status: 'on_break' },
+      };
+    });
+
     try {
       await api.request('/api/attendance/break/start', { method: 'POST' });
       await fetchToday();
     } catch (err) {
       setError(err.message || 'Start break failed');
+      await fetchToday();
       throw err;
     } finally {
       setActionLoading(false);
     }
   };
 
+  // Optimistic Resume Break
   const resumeBreak = async () => {
     setActionLoading(true);
     setError(null);
+    const nowIso = new Date().toISOString();
+
+    setTodayData(prev => {
+      if (!prev?.session) return prev;
+      const newBreaks = (prev.breaks || []).map(b => (!b.break_end ? { ...b, break_end: nowIso } : b));
+      return {
+        ...prev,
+        breaks: newBreaks,
+        session: { ...prev.session, status: 'active' },
+      };
+    });
+
     try {
       await api.request('/api/attendance/break/resume', { method: 'POST' });
       await fetchToday();
     } catch (err) {
       setError(err.message || 'Resume break failed');
+      await fetchToday();
       throw err;
     } finally {
       setActionLoading(false);
@@ -218,6 +317,24 @@ export function AttendanceProvider({ children }) {
     }
   };
 
+  const universalEditDay = async (editPayload) => {
+    setActionLoading(true);
+    setError(null);
+    try {
+      const res = await api.request('/api/attendance/direct-edit', {
+        method: 'POST',
+        body: JSON.stringify(editPayload),
+      });
+      await fetchToday();
+      return res;
+    } catch (err) {
+      setError(err.message || 'Edit failed');
+      throw err;
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const directEdit = async (fieldChanged, breakId, newValue, reason) => {
     if (!todayData?.session?.id) throw new Error('No session to edit');
     setActionLoading(true);
@@ -253,6 +370,8 @@ export function AttendanceProvider({ children }) {
         liveBreakSeconds,
         isLeave: todayData?.isLeave || false,
         isWFH: todayData?.workMode === 'wfh',
+        isWeekend: todayData?.isWeekend || false,
+        isExempted: todayData?.isExempted || false,
         workMode: todayData?.workMode || 'office',
         leaveReason: todayData?.leaveReason || null,
         refreshToday: fetchToday,
@@ -264,6 +383,7 @@ export function AttendanceProvider({ children }) {
         unmarkLeave,
         markWFH,
         unmarkWFH,
+        universalEditDay,
         directEdit,
       }}
     >

@@ -59,26 +59,29 @@ export default function HistoryScreen() {
   ];
 
   const getDayStatusStyle = (day) => {
-    if (day.statusType === 'leave') {
-      return 'bg-amber-500/10 text-amber-300 border-amber-500/30';
+    if (day.statusType === 'leave' || day.workMode === 'leave') {
+      return 'bg-amber-500/15 text-amber-300 border-amber-500/30';
     }
     if (day.statusType === 'wfh' || day.workMode === 'wfh') {
-      return 'bg-sky-500/10 text-sky-300 border-sky-500/30';
+      return 'bg-sky-500/15 text-sky-300 border-sky-500/30';
     }
-    if (!day.isWorkingDay) {
-      return 'bg-slate-900/40 text-slate-600 border-slate-800/40';
+    if (day.isWeekend || !day.isWorkingDay) {
+      if (day.floorHours > 0) {
+        return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40';
+      }
+      return 'bg-slate-900/60 text-slate-500 border-slate-800/60';
     }
     if (day.statusType === 'met') {
-      return 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30';
+      return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40';
     }
     if (day.statusType === 'warning') {
-      return 'bg-amber-500/10 text-amber-300 border-amber-500/30';
+      return 'bg-amber-500/15 text-amber-300 border-amber-500/30';
     }
     if (day.statusType === 'short' || day.statusType === 'absent') {
-      return 'bg-rose-500/10 text-rose-300 border-rose-500/30';
+      return 'bg-rose-500/15 text-rose-300 border-rose-500/30';
     }
     if (day.statusType === 'in_progress') {
-      return 'bg-indigo-500/10 text-indigo-300 border-indigo-500/30 ring-1 ring-indigo-500/50';
+      return 'bg-indigo-500/15 text-indigo-300 border-indigo-500/40 ring-1 ring-indigo-500/50';
     }
     return 'bg-slate-800/30 text-slate-400 border-slate-800';
   };
@@ -146,7 +149,7 @@ export default function HistoryScreen() {
       )}
 
       {/* Legend */}
-      <div className="flex items-center justify-between px-2 text-[10px] text-slate-400">
+      <div className="flex flex-wrap items-center justify-between gap-1 px-2 text-[10px] text-slate-400">
         <div className="flex items-center space-x-1">
           <span className="w-2.5 h-2.5 rounded bg-emerald-500/20 border border-emerald-500/50" />
           <span>7h+ Met</span>
@@ -167,19 +170,22 @@ export default function HistoryScreen() {
           <Palmtree className="w-3 h-3" />
           <span>Leave</span>
         </div>
+        <div className="flex items-center space-x-1 text-emerald-400">
+          <span>🌴 Weekend</span>
+        </div>
       </div>
 
       {/* Calendar Grid */}
       <div className="glass-panel border border-white/10 rounded-3xl p-4 shadow-glass">
         {/* Day-of-week headers */}
         <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-slate-400 pb-2 mb-2 border-b border-white/10">
-          <div>Sun</div>
+          <div className="text-amber-400/80">Sun</div>
           <div>Mon</div>
           <div>Tue</div>
           <div>Wed</div>
           <div>Thu</div>
           <div>Fri</div>
-          <div>Sat</div>
+          <div className="text-amber-400/80">Sat</div>
         </div>
 
         {/* Days cells */}
@@ -204,6 +210,8 @@ export default function HistoryScreen() {
                   <Palmtree className="w-3 h-3 text-amber-400 animate-pulse" />
                 ) : day.statusType === 'wfh' || day.workMode === 'wfh' ? (
                   <Home className="w-3 h-3 text-sky-400" />
+                ) : (day.isWeekend || !day.isWorkingDay) ? (
+                  <span className="text-[10px]">🌴</span>
                 ) : day.session ? (
                   <Building2 className="w-3 h-3 text-current opacity-70" />
                 ) : null}
@@ -214,12 +222,18 @@ export default function HistoryScreen() {
                   <span className="text-[9px] text-amber-400 font-bold block">Leave</span>
                 ) : day.statusType === 'wfh' || day.workMode === 'wfh' ? (
                   <span className="text-[9px] text-sky-400 font-bold block">WFH</span>
-                ) : day.isWorkingDay ? (
+                ) : (day.isWeekend || !day.isWorkingDay) ? (
+                  day.floorHours > 0 ? (
+                    <span className="text-[10px] font-mono font-bold text-emerald-400 block tabular-nums">
+                      +{day.floorHours}h
+                    </span>
+                  ) : (
+                    <span className="text-[9px] text-slate-500 block">Off</span>
+                  )
+                ) : (
                   <span className="text-[10px] font-mono font-bold block tabular-nums">
                     {day.floorHours > 0 ? `${day.floorHours}h` : day.isFuture ? '-' : '0h'}
                   </span>
-                ) : (
-                  <span className="text-[9px] text-slate-500 block">Off</span>
                 )}
               </div>
             </button>

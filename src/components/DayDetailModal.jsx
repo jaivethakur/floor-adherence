@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { X, Clock, Coffee, AlertCircle, CheckCircle2, History, Edit3, Building2, Home, Palmtree, Trash2 } from 'lucide-react';
+import { X, Clock, Coffee, AlertCircle, CheckCircle2, History, Edit3, Building2, Home, Palmtree, Trash2, Sparkles } from 'lucide-react';
 import { api } from '../services/api';
-import EditModal from './EditModal';
+import UniversalDayEditorModal from './UniversalDayEditorModal';
 
 export default function DayDetailModal({ isOpen, onClose, dayData, onRefresh }) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showEditorModal, setShowEditorModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -60,6 +60,8 @@ export default function DayDetailModal({ isOpen, onClose, dayData, onRefresh }) 
   const breaks = detail?.breaks || [];
   const edits = detail?.edits || [];
   const isLeave = dayData.workMode === 'leave' || dayData.statusType === 'leave';
+  const isWFH = dayData.workMode === 'wfh' || dayData.statusType === 'wfh';
+  const isWeekend = dayData.isWeekend || dayData.dayOfWeek === 'Sat' || dayData.dayOfWeek === 'Sun';
 
   const formatIST = (isoString) => {
     if (!isoString) return '--:--';
@@ -76,27 +78,33 @@ export default function DayDetailModal({ isOpen, onClose, dayData, onRefresh }) 
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl relative max-h-[90vh] flex flex-col">
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+        <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl relative max-h-[90vh] flex flex-col text-xs">
           {/* Header */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-800">
             <div>
               <div className="flex items-center space-x-2">
                 <h3 className="font-heading font-bold text-slate-100 text-base">{dayData.date}</h3>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300">
-                  {dayData.dayOfWeek}
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                  isWeekend ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-800 text-slate-300'
+                }`}>
+                  {dayData.dayOfWeek} {isWeekend && '🌴'}
                 </span>
               </div>
               <div className="flex items-center space-x-2 text-xs text-slate-400 mt-0.5">
-                {isLeave ? (
+                {isWeekend ? (
+                  <span className="text-emerald-400 font-semibold flex items-center space-x-1">
+                    <span>🌴 Weekend (Quota Exempted)</span>
+                  </span>
+                ) : isLeave ? (
                   <span className="text-amber-400 font-semibold flex items-center space-x-1">
                     <Palmtree className="w-3.5 h-3.5" />
                     <span>On Leave (Target Excluded)</span>
                   </span>
-                ) : dayData.workMode === 'wfh' ? (
+                ) : isWFH ? (
                   <span className="text-sky-400 font-semibold flex items-center space-x-1">
                     <Home className="w-3.5 h-3.5" />
-                    <span>Work from Home</span>
+                    <span>Work from Home (Exempted)</span>
                   </span>
                 ) : (
                   <span className="text-indigo-400 font-semibold flex items-center space-x-1">
@@ -135,26 +143,35 @@ export default function DayDetailModal({ isOpen, onClose, dayData, onRefresh }) 
                   <span>Remove Leave (Revert Day)</span>
                 </button>
               </div>
+            ) : isWFH ? (
+              <div className="p-5 bg-sky-500/10 border border-sky-500/20 rounded-2xl text-center space-y-2">
+                <Home className="w-10 h-10 text-sky-400 mx-auto" />
+                <h4 className="font-heading font-bold text-sm text-white">Work From Home (WFH)</h4>
+                <p className="text-slate-300 text-[11px]">
+                  WFH days are exempted from your 7-hour daily requirement with zero impact on your adherence average.
+                </p>
+              </div>
             ) : (
               <>
                 {/* Hours Metric Card */}
                 <div className="p-4 bg-slate-800/60 rounded-2xl border border-slate-700/60 flex items-center justify-between">
                   <div>
                     <span className="text-slate-400 block text-[11px]">
-                      {dayData.workMode === 'wfh' ? 'Floor Hours (WFH = 0h)' : 'Floor Hours'}
+                      {isWeekend ? 'Weekend Bonus Hours' : 'Floor Hours'}
                     </span>
                     <span className="font-heading font-bold text-2xl text-white tabular-nums">
                       {dayData.floorHours}h
                     </span>
                     <span className="text-slate-500 text-[11px] block">
-                      Target: {dayData.isWorkingDay && dayData.statusType !== 'leave' ? '7.00h' : '0.00h'}
+                      Target: {isWeekend ? '0.00h (Weekend)' : '7.00h'}
                     </span>
                   </div>
 
                   <div>
-                    {dayData.workMode === 'wfh' ? (
-                      <div className="px-3 py-1.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 font-medium text-xs">
-                        WFH (0 Floor Hours)
+                    {isWeekend ? (
+                      <div className="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold flex items-center space-x-1">
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Weekend Off</span>
                       </div>
                     ) : dayData.floorHours >= 7 ? (
                       <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
@@ -266,42 +283,32 @@ export default function DayDetailModal({ isOpen, onClose, dayData, onRefresh }) 
             )}
           </div>
 
-          {/* Footer Actions */}
+          {/* Footer Actions: Universal Edit Button */}
           <div className="pt-3 border-t border-slate-800 flex space-x-2">
-            {!isLeave && session && (
-              <button
-                onClick={() => setShowEditModal(true)}
-                className="flex-1 py-2.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 font-semibold border border-indigo-500/30 active-scale transition-all flex items-center justify-center space-x-2 text-xs"
-              >
-                <Edit3 className="w-4 h-4" />
-                <span>Edit Logged Times</span>
-              </button>
-            )}
-
-            {!isLeave && (
-              <button
-                onClick={handleToggleLeave}
-                disabled={actionLoading}
-                className="py-2.5 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 active-scale transition-all flex items-center justify-center space-x-1.5 text-xs"
-              >
-                <Palmtree className="w-4 h-4" />
-                <span>Mark Leave</span>
-              </button>
-            )}
+            <button
+              onClick={() => setShowEditorModal(true)}
+              className="flex-1 py-3 rounded-2xl bg-indigo-600/25 hover:bg-indigo-600/35 text-indigo-300 font-bold border border-indigo-500/30 active-scale transition-all flex items-center justify-center space-x-2 text-xs shadow-lg shadow-indigo-600/20"
+            >
+              <Edit3 className="w-4 h-4" />
+              <span>Edit / Adjust This Day</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Edit Modal */}
-      {showEditModal && session && (
-        <EditModal
-          isOpen={showEditModal}
-          onClose={() => setShowEditModal(false)}
-          session={session}
-          breaks={breaks}
+      {/* Universal Day Editor Modal */}
+      {showEditorModal && (
+        <UniversalDayEditorModal
+          isOpen={showEditorModal}
+          onClose={() => setShowEditorModal(false)}
+          date={dayData.date}
+          initialData={dayData}
           onSuccess={() => {
-            loadSessionDetail(session.id);
+            if (dayData.session?.id) {
+              loadSessionDetail(dayData.session.id);
+            }
             onRefresh && onRefresh();
+            onClose();
           }}
         />
       )}

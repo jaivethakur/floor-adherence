@@ -17,7 +17,7 @@ export async function onRequestGet(context) {
     let settings = {
       daily_target_hours: 7,
       auto_checkout_time: '20:00',
-      work_days: 'Mon,Tue,Wed,Thu,Fri,Sat',
+      work_days: 'Mon,Tue,Wed,Thu,Fri',
     };
 
     if (env.DB) {
@@ -53,27 +53,41 @@ export async function onRequestGet(context) {
       }
     }
 
+    const [y, m, d] = todayIST.split('-').map(Number);
+    const dateObj = new Date(Date.UTC(y, m - 1, d));
+    const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dateObj.getUTCDay()];
+    const isWeekend = (dayOfWeek === 'Sat' || dayOfWeek === 'Sun');
+
     const isLeave = session?.work_mode === 'leave' || session?.status === 'leave';
-    const calculations = isLeave ? { floorSeconds: 0, breakSeconds: 0, grossSeconds: 0 } : calculateSessionSeconds(session, breaks);
+    const isWFH = session?.work_mode === 'wfh';
+    const isExempted = isLeave || isWFH || isWeekend;
+
+    const calculations = (isLeave || isWFH)
+      ? { floorSeconds: 0, breakSeconds: 0, grossSeconds: 0 }
+      : calculateSessionSeconds(session, breaks);
 
     return jsonResponse({
       workDate: todayIST,
+      dayOfWeek,
+      isWeekend,
+      isExempted,
       session,
-      workMode: session?.work_mode || 'office',
+      workMode: session?.work_mode || (isLeave ? 'leave' : (isWFH ? 'wfh' : (isWeekend ? 'weekend' : 'office'))),
       isLeave,
+      isWFH,
       leaveReason: session?.leave_reason || null,
       breaks,
       hasEdits,
       settings: {
         dailyTargetHours: parseFloat(settings.daily_target_hours) || 7,
         autoCheckoutTime: settings.auto_checkout_time || '20:00',
-        workDays: settings.work_days || 'Mon,Tue,Wed,Thu,Fri,Sat',
+        workDays: settings.work_days || 'Mon,Tue,Wed,Thu,Fri',
       },
       stats: {
         floorSeconds: calculations.floorSeconds,
         breakSeconds: calculations.breakSeconds,
         grossSeconds: calculations.grossSeconds,
-        targetSeconds: isLeave ? 0 : (parseFloat(settings.daily_target_hours) || 7) * 3600,
+        targetSeconds: isExempted ? 0 : (parseFloat(settings.daily_target_hours) || 7) * 3600,
       },
     });
   } catch (err) {

@@ -377,7 +377,64 @@ class ApiService {
 
     // 7. Attendance: Direct Edit
     if (path.endsWith('/api/attendance/direct-edit') && method === 'POST') {
-      const { sessionId, fieldChanged, breakId, newValue, reason } = body;
+      const { date, sessionId, fieldChanged, breakId, newValue, workMode, checkInTime, checkOutTime, breaks, leaveReason } = body;
+
+      if (date) {
+        let session = db.sessions.find(s => s.user_id === currentUser.id && s.work_date === date);
+
+        if (workMode === 'clear') {
+          if (session) {
+            db.breaks = db.breaks.filter(b => b.session_id !== session.id);
+            db.sessions = db.sessions.filter(s => s.id !== session.id);
+            saveMockDB(db);
+          }
+          return { message: 'Day cleared', date };
+        }
+
+        if (!session) {
+          session = {
+            id: 'sess_' + Date.now().toString(36),
+            user_id: currentUser.id,
+            work_date: date,
+            work_mode: workMode || 'office',
+            check_in_time: checkInTime || null,
+            check_out_time: checkOutTime || null,
+            status: checkOutTime ? 'completed' : (checkInTime ? 'active' : 'not_checked_in'),
+            is_auto_checkout: 0,
+          };
+          db.sessions.push(session);
+        } else {
+          session.work_mode = workMode || 'office';
+          session.check_in_time = checkInTime || null;
+          session.check_out_time = checkOutTime || null;
+          session.status = checkOutTime ? 'completed' : (checkInTime ? 'active' : 'not_checked_in');
+          if (workMode === 'leave') {
+            session.status = 'leave';
+            session.leave_reason = leaveReason || 'Personal Leave';
+          } else if (workMode === 'wfh') {
+            session.status = 'completed';
+          }
+        }
+
+        // Sync breaks
+        db.breaks = db.breaks.filter(b => b.session_id !== session.id);
+        if (Array.isArray(breaks)) {
+          for (const b of breaks) {
+            if (b.break_start) {
+              db.breaks.push({
+                id: 'brk_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+                session_id: session.id,
+                break_start: b.break_start,
+                break_end: b.break_end || null,
+              });
+            }
+          }
+        }
+
+        saveMockDB(db);
+        return { message: 'Day updated successfully', session };
+      }
+
       const session = db.sessions.find(s => s.id === sessionId);
       if (!session) throw new Error('Session not found');
 

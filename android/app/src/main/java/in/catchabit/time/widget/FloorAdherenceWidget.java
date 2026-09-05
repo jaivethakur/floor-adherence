@@ -24,8 +24,10 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,7 +43,7 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
     public static final String ACTION_WFH = "in.catchabit.time.widget.ACTION_WFH";
     public static final String ACTION_REFRESH = "in.catchabit.time.widget.ACTION_REFRESH";
 
-    // Official production domain without Cloudflare Zero Trust blocks
+    // Official production domain
     private static final String API_BASE = "https://time.catchabit.in";
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
     private static final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -67,34 +69,56 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
         String subtext = prefs.getString("widget_subtext", "Tap action below to update");
         String syncTime = prefs.getString("last_sync_time", "--:--");
 
+        // Check if today is Saturday or Sunday in IST
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"));
+        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+        boolean isWeekendToday = (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY);
+
         // Dynamic status badge styling
         String displayStatus = "⚡ READY";
         int badgeBg = R.drawable.widget_badge_ready;
         int statusColor = Color.parseColor("#A78BFA");
         String breakButtonText = "☕ Break";
+        String targetText = "Target: 7.0h floor quota";
 
         if ("active".equals(status)) {
             displayStatus = "● ON FLOOR";
             badgeBg = R.drawable.widget_badge_green;
             statusColor = Color.parseColor("#10B981");
             breakButtonText = "☕ Break";
+            targetText = isWeekendToday ? "Target: 0.0h (Bonus Adherence)" : "Target: 7.0h floor quota";
         } else if ("on_break".equals(status)) {
             displayStatus = "☕ ON BREAK";
             badgeBg = R.drawable.widget_badge_amber;
             statusColor = Color.parseColor("#F59E0B");
             breakButtonText = "▶️ Resume";
+            targetText = isWeekendToday ? "Target: 0.0h (Bonus Adherence)" : "Target: 7.0h floor quota";
         } else if ("completed".equals(status)) {
             displayStatus = "✓ CHECKED OUT";
             badgeBg = R.drawable.widget_badge_indigo;
             statusColor = Color.parseColor("#818CF8");
+            targetText = isWeekendToday ? "Target: 0.0h (Bonus Adherence)" : "Target: 7.0h floor quota";
         } else if ("wfh".equals(status)) {
             displayStatus = "🏠 WFH";
             badgeBg = R.drawable.widget_badge_cyan;
             statusColor = Color.parseColor("#38BDF8");
+            targetText = "Target: 0.0h (WFH Exempted)";
+            subtext = "Remote — Quota Exempted";
+            shortfallHours = "0.00";
         } else if ("leave".equals(status)) {
             displayStatus = "🏖️ LEAVE";
-            badgeBg = R.drawable.widget_badge_ready;
-            statusColor = Color.parseColor("#A78BFA");
+            badgeBg = R.drawable.widget_badge_amber;
+            statusColor = Color.parseColor("#F59E0B");
+            targetText = "Target: 0.0h (Leave Exempted)";
+            subtext = "Leave — Quota Exempted";
+            shortfallHours = "0.00";
+        } else if ("weekend".equals(status) || isWeekendToday) {
+            displayStatus = "🌴 WEEKEND";
+            badgeBg = R.drawable.widget_badge_green;
+            statusColor = Color.parseColor("#34D399");
+            targetText = "Target: 0.0h (Weekend Off)";
+            subtext = "Weekend — Quota Exempted";
+            shortfallHours = "0.00";
         }
 
         views.setTextViewText(R.id.tv_widget_status, displayStatus);
@@ -102,6 +126,7 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
         views.setInt(R.id.tv_widget_status, "setBackgroundResource", badgeBg);
 
         views.setTextViewText(R.id.tv_floor_time, floorHours);
+        views.setTextViewText(R.id.tv_target_subtext, targetText);
         views.setTextViewText(R.id.tv_widget_subtext, subtext);
         views.setTextViewText(R.id.tv_widget_breaks, "☕ Break: " + breakHours + "h");
 
@@ -110,7 +135,8 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
             shortfallVal = Double.parseDouble(shortfallHours);
         } catch (Exception ignored) {}
 
-        if (shortfallVal <= 0.0) {
+        boolean isExemptedState = isWeekendToday || "weekend".equals(status) || "wfh".equals(status) || "leave".equals(status);
+        if (shortfallVal <= 0.0 || isExemptedState) {
             views.setTextViewText(R.id.tv_widget_shortfall, "✓ Quota Met!");
             views.setTextColor(R.id.tv_widget_shortfall, Color.parseColor("#34D399"));
         } else {
@@ -170,7 +196,6 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
         if (ACTION_CHECK_IN.equals(action) || ACTION_BREAK.equals(action) ||
             ACTION_CHECK_OUT.equals(action) || ACTION_WFH.equals(action)) {
             
-            // Keep process alive while performing background HTTP request
             final PendingResult pendingResult = goAsync();
             executor.execute(() -> {
                 try {
@@ -264,8 +289,11 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
 
             String workMode = obj.optString("workMode", "office");
             boolean isLeave = obj.optBoolean("isLeave", false);
+            boolean isWeekend = obj.optBoolean("isWeekend", false);
+            boolean isExempted = obj.optBoolean("isExempted", false);
+
             JSONObject session = obj.optJSONObject("session");
-            String status = isLeave ? "leave" : (session != null ? session.optString("status", "not_checked_in") : "not_checked_in");
+            String status = isLeave ? "leave" : (session != null ? session.optString("status", "not_checked_in") : (isWeekend ? "weekend" : "not_checked_in"));
             if ("wfh".equals(workMode)) status = "wfh";
 
             JSONObject stats = obj.optJSONObject("stats");
@@ -277,10 +305,16 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
             double breakHours = breakSeconds / 3600.0;
             double shortfallHours = Math.max(0, (targetSeconds - floorSeconds) / 3600.0);
 
+            if (isWeekend || isExempted || "wfh".equals(workMode) || isLeave) {
+                shortfallHours = 0.0;
+            }
+
             String floorFormatted = String.format(Locale.US, "%.2f", floorHours);
             String breakFormatted = String.format(Locale.US, "%.2f", breakHours);
             String shortfallFormatted = String.format(Locale.US, "%.2f", shortfallHours);
             String syncFormatted = new SimpleDateFormat("hh:mm a", Locale.US).format(new Date());
+
+            String subtext = isWeekend ? "Weekend — Quota Exempted" : ("wfh".equals(workMode) ? "WFH — Quota Exempted" : (isLeave ? "Leave — Quota Exempted" : "Target: 7.0h daily quota"));
 
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString("today_status", status);
@@ -288,7 +322,7 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
             editor.putString("today_break_hours", breakFormatted);
             editor.putString("today_shortfall_hours", shortfallFormatted);
             editor.putString("last_sync_time", syncFormatted);
-            editor.putString("widget_subtext", "Target: 7.0h daily quota");
+            editor.putString("widget_subtext", subtext);
             editor.apply();
 
             // Notify all widgets to update

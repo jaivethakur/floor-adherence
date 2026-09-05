@@ -21,12 +21,17 @@ export function getISTDateString(date = new Date()) {
   return istDate.toISOString().split('T')[0];
 }
 
-// Check if a given day is a configured working day (e.g. 'Mon,Tue,Wed,Thu,Fri,Sat')
-export function isWorkingDay(dateObj, workDaysString = 'Mon,Tue,Wed,Thu,Fri,Sat') {
+// Check if a given day is a configured working day (Default Mon-Fri; Sat/Sun are weekends)
+export function isWorkingDay(dateObj, workDaysString = 'Mon,Tue,Wed,Thu,Fri') {
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const dayName = days[dateObj.getUTCDay()];
   const allowed = workDaysString.split(',').map(d => d.trim());
   return allowed.includes(dayName);
+}
+
+export function isWeekendDay(dateObj) {
+  const day = dateObj.getUTCDay();
+  return day === 0 || day === 6; // 0 is Sun, 6 is Sat
 }
 
 // Calculate floor hours & breaks duration in seconds

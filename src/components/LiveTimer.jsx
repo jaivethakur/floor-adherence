@@ -1,11 +1,13 @@
 import React from 'react';
-import { Coffee, Flame, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { Coffee, Flame, CheckCircle2, AlertCircle, Sparkles, Palmtree, Home } from 'lucide-react';
 
 export default function LiveTimer({
   floorSeconds = 0,
   breakSeconds = 0,
-  targetSeconds = 25200, // 7 hours
-  status = 'not_checked_in', // 'active' | 'on_break' | 'completed' | 'not_checked_in'
+  targetSeconds = 25200, // 7 hours (0 for weekend/exempted)
+  status = 'not_checked_in', // 'active' | 'on_break' | 'completed' | 'not_checked_in' | 'weekend' | 'wfh' | 'leave'
+  isWeekend = false,
+  isExempted = false,
   isAutoCheckout = false,
 }) {
   const formatTimeParts = (totalSec) => {
@@ -23,49 +25,75 @@ export default function LiveTimer({
   const { hrs, mins, secs, totalHoursDecimal } = formatTimeParts(floorSeconds);
   const breakFormatted = formatTimeParts(breakSeconds);
 
-  // Progress percentage towards 7 hours
-  const progressPercent = Math.min(100, Math.round((floorSeconds / targetSeconds) * 100));
-  const isTargetMet = floorSeconds >= targetSeconds;
+  // Exemption calculation
+  const hasZeroTarget = targetSeconds === 0 || isWeekend || isExempted || status === 'wfh' || status === 'leave';
+  const effectiveTarget = hasZeroTarget ? 0 : targetSeconds;
+
+  // Progress percentage
+  let progressPercent = 0;
+  if (hasZeroTarget) {
+    progressPercent = floorSeconds > 0 ? 100 : 0;
+  } else {
+    progressPercent = Math.min(100, Math.round((floorSeconds / effectiveTarget) * 100));
+  }
+
+  const isTargetMet = hasZeroTarget ? true : floorSeconds >= effectiveTarget;
 
   // SVG Ring Calculations
   const radius = 86;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+  const strokeDashoffset = hasZeroTarget && floorSeconds === 0
+    ? circumference
+    : circumference - (progressPercent / 100) * circumference;
 
   return (
     <div className="relative flex flex-col items-center justify-center p-6 glass-panel rounded-3xl shadow-glass border border-white/10 overflow-hidden backdrop-blur-2xl">
-      {/* Background radial glow */}
+      {/* Dynamic Background Radial Glow */}
       <div
-        className={`absolute inset-0 pointer-events-none opacity-20 blur-3xl transition-all duration-1000 ${
+        className={`absolute inset-0 pointer-events-none opacity-25 blur-3xl transition-all duration-1000 ${
           status === 'active'
-            ? 'bg-gradient-to-b from-emerald-500/40 via-transparent to-transparent'
+            ? 'bg-gradient-to-b from-emerald-500/50 via-teal-500/10 to-transparent'
             : status === 'on_break'
-            ? 'bg-gradient-to-b from-amber-500/40 via-transparent to-transparent'
-            : isTargetMet
-            ? 'bg-gradient-to-b from-indigo-500/40 via-transparent to-transparent'
-            : 'bg-gradient-to-b from-slate-600/20 via-transparent to-transparent'
+            ? 'bg-gradient-to-b from-amber-500/50 via-orange-500/10 to-transparent'
+            : isWeekend
+            ? 'bg-gradient-to-b from-emerald-500/30 via-sky-500/10 to-transparent'
+            : status === 'wfh'
+            ? 'bg-gradient-to-b from-sky-500/40 via-cyan-500/10 to-transparent'
+            : status === 'leave'
+            ? 'bg-gradient-to-b from-amber-500/40 via-yellow-500/10 to-transparent'
+            : isTargetMet && floorSeconds > 0
+            ? 'bg-gradient-to-b from-emerald-500/40 via-indigo-500/10 to-transparent'
+            : 'bg-gradient-to-b from-indigo-600/25 via-purple-600/10 to-transparent'
         }`}
       />
 
       {/* Circular Holographic Timer Ring */}
       <div className="relative w-56 h-56 flex items-center justify-center my-1">
-        <svg className="w-full h-full transform -rotate-90 filter drop-shadow-lg" viewBox="0 0 200 200">
+        <svg className="w-full h-full transform -rotate-90 filter drop-shadow-[0_0_15px_rgba(99,102,241,0.2)]" viewBox="0 0 200 200">
           <defs>
             <linearGradient id="timerGradientIndigo" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#818cf8" />
-              <stop offset="100%" stopColor="#4f46e5" />
+              <stop offset="0%" stopColor="#a5b4fc" />
+              <stop offset="50%" stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#4338ca" />
             </linearGradient>
             <linearGradient id="timerGradientEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#34d399" />
-              <stop offset="100%" stopColor="#059669" />
+              <stop offset="0%" stopColor="#6ee7b7" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#047857" />
             </linearGradient>
             <linearGradient id="timerGradientAmber" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#fbbf24" />
-              <stop offset="100%" stopColor="#d97706" />
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+            <linearGradient id="timerGradientCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7dd3fc" />
+              <stop offset="50%" stopColor="#0284c7" />
+              <stop offset="100%" stopColor="#0369a1" />
             </linearGradient>
           </defs>
 
-          {/* Secondary background halo */}
+          {/* Outer Halo Track */}
           <circle
             cx="100"
             cy="100"
@@ -76,18 +104,18 @@ export default function LiveTimer({
             fill="transparent"
           />
 
-          {/* Background Track with tick markings aesthetic */}
+          {/* Base Track */}
           <circle
             cx="100"
             cy="100"
             r={radius}
-            className="text-slate-800/80"
+            className="text-slate-800/90"
             strokeWidth="10"
             stroke="currentColor"
             fill="transparent"
           />
 
-          {/* Progress Glowing Stroke */}
+          {/* Glowing Animated Progress Stroke */}
           <circle
             cx="100"
             cy="100"
@@ -95,10 +123,12 @@ export default function LiveTimer({
             strokeWidth="10"
             strokeLinecap="round"
             stroke={
-              isTargetMet
-                ? 'url(#timerGradientEmerald)'
-                : status === 'on_break'
+              status === 'on_break'
                 ? 'url(#timerGradientAmber)'
+                : isWeekend || isTargetMet
+                ? 'url(#timerGradientEmerald)'
+                : status === 'wfh'
+                ? 'url(#timerGradientCyan)'
                 : 'url(#timerGradientIndigo)'
             }
             fill="transparent"
@@ -108,60 +138,90 @@ export default function LiveTimer({
           />
         </svg>
 
-        {/* Inner Glass Display */}
+        {/* Inner HUD Display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           {/* Status Badge */}
-          <div className="mb-1.5">
+          <div className="mb-2">
             {status === 'active' && (
-              <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm">
+              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                <span>On Floor</span>
+                <span>ON FLOOR</span>
               </span>
             )}
             {status === 'on_break' && (
-              <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm">
+              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.3)]">
                 <Coffee className="w-3.5 h-3.5 text-amber-400 animate-bounce" />
-                <span>On Break</span>
+                <span>ON BREAK</span>
               </span>
             )}
             {status === 'completed' && (
-              <span className={`inline-flex items-center space-x-1 px-3 py-0.5 rounded-full text-[11px] font-semibold ${
+              <span className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
                 isAutoCheckout
-                  ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
-                  : 'bg-indigo-500/15 text-indigo-200 border border-indigo-500/30'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                  : 'bg-indigo-500/20 text-indigo-200 border border-indigo-500/40'
               }`}>
                 {isAutoCheckout ? <AlertCircle className="w-3.5 h-3.5 text-rose-400" /> : <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />}
-                <span>{isAutoCheckout ? 'Auto-Checked Out' : 'Checked Out'}</span>
+                <span>{isAutoCheckout ? 'AUTO-CHECKED OUT' : 'CHECKED OUT'}</span>
               </span>
             )}
-            {status === 'not_checked_in' && (
+            {isWeekend && (
+              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm">
+                <span>🌴 WEEKEND</span>
+              </span>
+            )}
+            {!isWeekend && status === 'wfh' && (
+              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[11px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">
+                <Home className="w-3.5 h-3.5" />
+                <span>WFH (EXEMPTED)</span>
+              </span>
+            )}
+            {!isWeekend && status === 'leave' && (
+              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                <Palmtree className="w-3.5 h-3.5" />
+                <span>LEAVE (EXEMPTED)</span>
+              </span>
+            )}
+            {!isWeekend && status === 'not_checked_in' && (
               <span className="inline-flex items-center space-x-1 px-3 py-0.5 rounded-full text-[11px] font-medium bg-white/5 text-slate-400 border border-white/10">
-                <span>Not Checked In</span>
+                <span>READY TO CHECK IN</span>
               </span>
             )}
           </div>
 
           {/* Primary Digital Time Display */}
-          <div className="font-heading font-black text-3xl sm:text-4xl text-white tabular-nums tracking-tight filter drop-shadow">
+          <div className="font-heading font-black text-3xl sm:text-4xl text-white tabular-nums tracking-tight filter drop-shadow-md">
             {hrs}:{mins}
             <span className="text-xl sm:text-2xl text-slate-400 font-mono font-normal">:{secs}</span>
           </div>
 
-          <div className="text-[11px] text-slate-400 mt-0.5 font-medium flex items-center space-x-1">
-            <span>{totalHoursDecimal}h / 7.0h floor target</span>
+          {/* Subtext: Target Quota or Exemption Note */}
+          <div className="text-[11px] text-slate-400 mt-1 font-medium flex items-center space-x-1">
+            {hasZeroTarget ? (
+              <span className="text-emerald-400/90 font-semibold">
+                {floorSeconds > 0 ? `+${totalHoursDecimal}h Bonus Adherence` : 'Quota Exempted (0.0h required)'}
+              </span>
+            ) : (
+              <span>{totalHoursDecimal}h / {(targetSeconds / 3600).toFixed(1)}h floor target</span>
+            )}
           </div>
 
-          {/* Percentage Progress with glow */}
-          <div className={`text-xs font-bold mt-1 ${isTargetMet ? 'text-emerald-400 text-glow-emerald' : 'text-indigo-300'}`}>
-            {progressPercent}% completed
+          {/* Percentage / Status Note */}
+          <div className={`text-xs font-bold mt-1 ${
+            hasZeroTarget
+              ? 'text-emerald-400 text-glow-emerald'
+              : isTargetMet
+              ? 'text-emerald-400 text-glow-emerald'
+              : 'text-indigo-300'
+          }`}>
+            {hasZeroTarget ? '✓ Day Protected' : `${progressPercent}% completed`}
           </div>
         </div>
       </div>
 
-      {/* Frosted Bottom Shelf: Break Info & Target */}
+      {/* Frosted Bottom Shelf: Breaks & Shortfall Matrix */}
       <div className="w-full mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between text-xs px-2">
         <div className="flex items-center space-x-1.5 text-slate-400">
-          <Coffee className="w-3.5 h-3.5 text-amber-400/90" />
+          <Coffee className="w-3.5 h-3.5 text-amber-400" />
           <span>Breaks:</span>
           <span className="font-mono text-slate-200 tabular-nums font-semibold">
             {breakFormatted.hrs}h {breakFormatted.mins}m
@@ -169,7 +229,12 @@ export default function LiveTimer({
         </div>
 
         <div>
-          {isTargetMet ? (
+          {hasZeroTarget ? (
+            <span className="flex items-center text-emerald-400 font-bold space-x-1 text-glow-emerald">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{floorSeconds > 0 ? 'Bonus Logged!' : 'Quota Exempted'}</span>
+            </span>
+          ) : isTargetMet ? (
             <span className="flex items-center text-emerald-400 font-bold space-x-1 text-glow-emerald">
               <Flame className="w-4 h-4 text-emerald-400 animate-pulse" />
               <span>Target Met!</span>

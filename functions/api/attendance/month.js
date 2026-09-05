@@ -24,7 +24,7 @@ export async function onRequestGet(context) {
 
     // 1. Fetch settings
     let dailyTargetHours = 7;
-    let workDaysString = 'Mon,Tue,Wed,Thu,Fri,Sat';
+    let workDaysString = 'Mon,Tue,Wed,Thu,Fri';
     const settingsRes = await env.DB.prepare('SELECT key, value FROM settings').all();
     if (settingsRes?.results) {
       for (const row of settingsRes.results) {
@@ -87,6 +87,8 @@ export async function onRequestGet(context) {
     for (let day = 1; day <= daysInMonth; day++) {
       const dateStr = `${monthStr}-${String(day).padStart(2, '0')}`;
       const dateObj = new Date(Date.UTC(year, month - 1, day));
+      const dayOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dateObj.getUTCDay()];
+      const isWeekend = (dayOfWeek === 'Sat' || dayOfWeek === 'Sun');
       const working = isWorkingDay(dateObj, workDaysString);
 
       if (working) {
@@ -143,7 +145,7 @@ export async function onRequestGet(context) {
         officeDaysCount++;
       }
 
-      let statusType = 'off';
+      let statusType = isWeekend ? 'weekend' : 'off';
 
       if (isLeave) {
         statusType = 'leave';
@@ -169,6 +171,8 @@ export async function onRequestGet(context) {
         } else {
           statusType = 'scheduled';
         }
+      } else if (isWeekend && session && floorHours > 0) {
+        statusType = 'weekend_work';
       }
 
       days.push({
