@@ -61,7 +61,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="min-h-full flex flex-col justify-center px-4 py-8 max-w-md mx-auto">
+    <div className="min-h-screen flex flex-col justify-center px-4 pt-12 pb-8 max-w-md mx-auto">
       {/* App Branding */}
       <div className="text-center mb-6">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 mx-auto flex items-center justify-center shadow-xl shadow-indigo-600/30 ring-1 ring-white/20 mb-3">

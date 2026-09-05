@@ -25,11 +25,25 @@ export function AttendanceProvider({ children }) {
         setLiveBreakSeconds(res.stats.breakSeconds || 0);
 
         // Sync to Preferences for Android Widget
-        const floorH = ((res.stats.floorSeconds || 0) / 3600).toFixed(2);
+        const floorSec = res.stats.floorSeconds || 0;
+        const breakSec = res.stats.breakSeconds || 0;
+        const targetSec = res.stats.targetSeconds || (7 * 3600);
+        const floorH = (floorSec / 3600).toFixed(2);
+        const breakH = (breakSec / 3600).toFixed(2);
+        const targetH = (targetSec / 3600).toFixed(1);
+        const shortfallH = Math.max(0, (targetSec - floorSec) / 3600).toFixed(2);
         const wMode = res.workMode || 'office';
         const st = res.isLeave ? 'leave' : (wMode === 'wfh' ? 'wfh' : (res.session?.status || 'not_checked_in'));
+
         Preferences.set({ key: 'today_status', value: st }).catch(() => {});
         Preferences.set({ key: 'today_floor_hours', value: floorH }).catch(() => {});
+        Preferences.set({ key: 'today_floor_seconds', value: String(floorSec) }).catch(() => {});
+        Preferences.set({ key: 'today_break_hours', value: breakH }).catch(() => {});
+        Preferences.set({ key: 'today_target_hours', value: targetH }).catch(() => {});
+        Preferences.set({ key: 'today_shortfall_hours', value: shortfallH }).catch(() => {});
+        if (user?.name) {
+          Preferences.set({ key: 'user_name', value: user.name }).catch(() => {});
+        }
       }
     } catch (err) {
       setError(err.message);

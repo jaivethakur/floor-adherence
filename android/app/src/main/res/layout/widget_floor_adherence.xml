@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="14dp"
+    android:padding="12dp"
     android:background="@drawable/widget_background">
 
-    <!-- Top Header: Icon, App Title & Live Mode Pill -->
+    <!-- Top Header: App Icon, Brand, Live Status Badge & Refresh -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -27,121 +27,200 @@
             android:layout_marginStart="8dp"
             android:text="Floor Adherence"
             android:textColor="#FFFFFF"
-            android:textSize="12sp"
+            android:textSize="13sp"
             android:textStyle="bold" />
 
+        <!-- Status Badge -->
         <TextView
             android:id="@+id/tv_widget_status"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/widget_btn_pill"
-            android:paddingHorizontal="8dp"
+            android:background="@drawable/widget_badge_ready"
+            android:paddingHorizontal="9dp"
             android:paddingVertical="3dp"
-            android:text="Ready"
-            android:textColor="#818CF8"
+            android:text="⚡ READY"
+            android:textColor="#A78BFA"
             android:textSize="10sp"
+            android:textStyle="bold" />
+
+        <!-- Refresh Button -->
+        <TextView
+            android:id="@+id/btn_widget_refresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:background="@drawable/widget_btn_refresh"
+            android:paddingHorizontal="7dp"
+            android:paddingVertical="2dp"
+            android:text="↻"
+            android:textColor="#CBD5E1"
+            android:textSize="12sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Center Display: Big Time & Target -->
+    <!-- Center Hero Section: 2-Column Balanced Dashboard -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp">
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="6dp">
 
+        <!-- Column 1: Big Time Display -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="bottom">
+            android:layout_weight="1.2"
+            android:orientation="vertical"
+            android:gravity="center_vertical">
 
-            <TextView
-                android:id="@+id/tv_floor_time"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0h 00m"
-                android:textColor="#FFFFFF"
-                android:textSize="26sp"
+                android:orientation="horizontal"
+                android:gravity="bottom">
+
+                <TextView
+                    android:id="@+id/tv_floor_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0.00"
+                    android:textColor="#FFFFFF"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginBottom="4dp"
+                    android:text="hrs"
+                    android:textColor="#818CF8"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_target_subtext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Target: 7.0h floor quota"
+                android:textColor="#94A3B8"
+                android:textSize="10sp" />
+
+            <TextView
+                android:id="@+id/tv_widget_subtext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="Tap action below to update"
+                android:textColor="#64748B"
+                android:textSize="9sp" />
+        </LinearLayout>
+
+        <!-- Column 2: Frosted Stats Sub-Card -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:background="@drawable/widget_card_glass"
+            android:paddingHorizontal="9dp"
+            android:paddingVertical="7dp">
+
+            <TextView
+                android:id="@+id/tv_widget_breaks"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="☕ Break: 00h 00m"
+                android:textColor="#FBBF24"
+                android:textSize="10sp"
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tv_widget_shortfall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:text="/ 7.0h floor quota"
-                android:textColor="#94A3B8"
-                android:textSize="11sp" />
-        </LinearLayout>
+                android:layout_marginTop="2dp"
+                android:text="⚡ Shortfall: 7.00h"
+                android:textColor="#F87171"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tv_widget_subtext"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Tap action below to update"
-            android:textColor="#64748B"
-            android:textSize="10sp" />
+            <TextView
+                android:id="@+id/tv_widget_synced"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Synced: --:--"
+                android:textColor="#64748B"
+                android:textSize="9sp" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Bottom Actions: 4 Touch Buttons -->
+    <!-- Bottom Actions: 4 Touch Action Pills -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="36dp"
-        android:orientation="horizontal">
+        android:layout_height="34dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
 
         <!-- Check In Button -->
-        <Button
+        <TextView
             android:id="@+id/btn_check_in"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginEnd="3dp"
+            android:gravity="center"
             android:background="@drawable/widget_btn_primary"
-            android:text="In"
+            android:text="⚡ In"
             android:textColor="#FFFFFF"
             android:textSize="11sp"
             android:textStyle="bold" />
 
         <!-- Break Button -->
-        <Button
+        <TextView
             android:id="@+id/btn_break"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginStart="2dp"
             android:layout_marginEnd="2dp"
+            android:gravity="center"
             android:background="@drawable/widget_btn_amber"
-            android:text="Break"
+            android:text="☕ Break"
             android:textColor="#FBBF24"
             android:textSize="11sp"
             android:textStyle="bold" />
 
         <!-- Check Out Button -->
-        <Button
+        <TextView
             android:id="@+id/btn_check_out"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginStart="2dp"
             android:layout_marginEnd="2dp"
-            android:background="@drawable/widget_btn_pill"
-            android:text="Out"
-            android:textColor="#E2E8F0"
+            android:gravity="center"
+            android:background="@drawable/widget_btn_slate"
+            android:text="🚪 Out"
+            android:textColor="#F1F5F9"
             android:textSize="11sp"
             android:textStyle="bold" />
 
         <!-- WFH Button -->
-        <Button
+        <TextView
             android:id="@+id/btn_wfh"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_marginStart="3dp"
+            android:gravity="center"
             android:background="@drawable/widget_btn_sky"
-            android:text="WFH"
+            android:text="🏠 WFH"
             android:textColor="#38BDF8"
             android:textSize="11sp"
             android:textStyle="bold" />

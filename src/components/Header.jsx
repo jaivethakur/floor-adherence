@@ -7,6 +7,12 @@ export default function Header({ onOpenInstallModal, onOpenWidgetModal }) {
   const [istTimeStr, setIstTimeStr] = useState('');
   const [istDateStr, setIstDateStr] = useState('');
 
+  const isNative = typeof window !== 'undefined' && (
+    window.Capacitor?.isNativePlatform?.() ||
+    window.location.origin.includes('localhost') ||
+    window.matchMedia('(display-mode: standalone)').matches
+  );
+
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -28,52 +34,64 @@ export default function Header({ onOpenInstallModal, onOpenWidgetModal }) {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 bg-slate-950/60 backdrop-blur-2xl border-b border-white/10 px-4 py-3 shadow-glass">
+    <header
+      className="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-2xl border-b border-white/10 px-4 pb-3 shadow-glass"
+      style={{
+        paddingTop: isNative
+          ? 'max(env(safe-area-inset-top, 0px), 42px)'
+          : 'max(env(safe-area-inset-top, 0px), 12px)'
+      }}
+    >
       <div className="max-w-md mx-auto flex items-center justify-between">
         {/* Brand & IST Clock */}
-        <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/20">
-            <Clock className="w-5 h-5 text-white animate-pulse" />
+        <div className="flex items-center space-x-2.5">
+          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 ring-1 ring-white/20 shrink-0">
+            <Clock className="w-4.5 h-4.5 text-white animate-pulse" />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5">
               <span className="font-heading font-bold text-sm tracking-tight text-white">Floor Adherence</span>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+              <span className="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                 IST
               </span>
             </div>
-            <div className="flex items-center space-x-1.5 text-xs text-slate-400 font-mono tabular-nums">
-              <span className="text-slate-300 font-semibold">{istTimeStr}</span>
+            <div className="flex items-center space-x-1 text-[11px] text-slate-400 font-mono tabular-nums">
+              <span className="text-slate-200 font-semibold">{istTimeStr}</span>
               <span className="text-slate-600">•</span>
-              <span className="text-[11px] text-slate-400">{istDateStr}</span>
+              <span className="text-slate-400">{istDateStr}</span>
             </div>
           </div>
         </div>
 
         {/* Actions & Profile */}
-        <div className="flex items-center space-x-1.5">
-          {/* Widget / Shortcut Launcher */}
-          <button
-            onClick={onOpenWidgetModal}
-            className="p-2 rounded-xl glass-pill text-indigo-300 hover:text-white hover:bg-white/10 active-scale transition-colors"
-            title="Add Home Screen Widget / Shortcut"
-          >
-            <Smartphone className="w-4 h-4" />
-          </button>
+        <div className="flex items-center space-x-1.5 shrink-0">
+          {/* Only show install / shortcut guide in web browser, not inside the native APK */}
+          {!isNative && (
+            <>
+              <button
+                onClick={onOpenWidgetModal}
+                className="p-2 rounded-xl glass-pill text-indigo-300 hover:text-white hover:bg-white/10 active-scale transition-colors"
+                title="Add Home Screen Widget / Shortcut"
+              >
+                <Smartphone className="w-4 h-4" />
+              </button>
 
-          {/* PWA Install Trigger */}
-          <button
-            onClick={onOpenInstallModal}
-            className="p-2 rounded-xl glass-pill text-slate-300 hover:text-white hover:bg-white/10 active-scale transition-colors"
-            title="Install App"
-          >
-            <Download className="w-4 h-4" />
-          </button>
+              <button
+                onClick={onOpenInstallModal}
+                className="p-2 rounded-xl glass-pill text-slate-300 hover:text-white hover:bg-white/10 active-scale transition-colors"
+                title="Install App"
+              >
+                <Download className="w-4 h-4" />
+              </button>
+            </>
+          )}
 
           {/* User Badge */}
-          <div className="flex items-center space-x-1.5 glass-pill rounded-full px-2.5 py-1 text-slate-200">
-            <User className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="text-xs font-medium max-w-[80px] truncate">
+          <div className="flex items-center space-x-1.5 glass-pill rounded-full pl-1 pr-2.5 py-1 text-slate-200 border border-white/10">
+            <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
+              {user?.name?.[0]?.toUpperCase() || 'U'}
+            </div>
+            <span className="text-xs font-semibold max-w-[85px] truncate">
               {user?.name?.split(' ')[0] || 'User'}
             </span>
           </div>

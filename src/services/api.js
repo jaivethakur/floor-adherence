@@ -110,36 +110,49 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
+    const isNativeOrLocal = typeof window !== 'undefined' && (
+      window.location.origin.includes('localhost') ||
+      window.Capacitor?.isNativePlatform?.()
+    );
+    const resolvedUrl = endpoint.startsWith('http')
+      ? endpoint
+      : (isNativeOrLocal ? `https://time.catchabit.in${endpoint}` : endpoint);
+
     const headers = {
       'Content-Type': 'application/json',
       ...(this.token ? { 'Authorization': `Bearer ${this.token}` } : {}),
       ...(options.headers || {}),
     };
 
+    let response;
     try {
-      const response = await fetch(endpoint, {
+      response = await fetch(resolvedUrl, {
         ...options,
         headers,
       });
-
-      const contentType = response.headers.get('content-type') || '';
-      if (contentType.includes('application/json')) {
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || `HTTP error ${response.status}`);
-        }
-        return data;
-      }
-
-      if (response.ok && contentType.includes('text/csv')) {
-        return await response.text();
-      }
-
-      throw new Error(`Endpoint not served natively (${response.status})`);
-    } catch (err) {
-      console.warn(`[API] Remote call to ${endpoint} failed (${err.message}). Using client engine.`);
+    } catch (netErr) {
+      console.warn(`[API] Network call to ${resolvedUrl} failed (${netErr.message}). Falling back to client engine.`);
       return this.handleMock(endpoint, options);
     }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP error ${response.status}`);
+      }
+      return data;
+    }
+
+    if (response.ok && contentType.includes('text/csv')) {
+      return await response.text();
+    }
+
+    if (!response.ok) {
+      throw new Error(`Server returned HTTP ${response.status}`);
+    }
+
+    return this.handleMock(endpoint, options);
   }
 
   async handleMock(endpoint, options = {}) {
