@@ -43,7 +43,6 @@
                 <action android:name="in.catchabit.time.widget.ACTION_CHECK_IN" />
                 <action android:name="in.catchabit.time.widget.ACTION_BREAK" />
                 <action android:name="in.catchabit.time.widget.ACTION_CHECK_OUT" />
-                <action android:name="in.catchabit.time.widget.ACTION_WFH" />
                 <action android:name="in.catchabit.time.widget.ACTION_REFRESH" />
             </intent-filter>
             <meta-data

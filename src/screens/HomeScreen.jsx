@@ -13,7 +13,6 @@ import {
   CalendarDays,
   CheckCircle2,
   Sparkles,
-  Flame
 } from 'lucide-react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
@@ -39,15 +38,9 @@ export default function HomeScreen({ onNavigateHistory }) {
     checkOut,
     startBreak,
     resumeBreak,
-    markLeave,
-    unmarkLeave,
-    markWFH,
-    unmarkWFH,
   } = useAttendance();
 
   const [showUniversalEditor, setShowUniversalEditor] = useState(false);
-  const [leaveModalOpen, setLeaveModalOpen] = useState(false);
-  const [leaveNote, setLeaveNote] = useState('Personal / Sick Leave');
   const [shortcutFeedback, setShortcutFeedback] = useState(null);
 
   const session = todayData?.session;
@@ -61,7 +54,7 @@ export default function HomeScreen({ onNavigateHistory }) {
     : (isWeekend ? 'weekend' : 'not_checked_in')));
   const isAutoCheckout = Boolean(session?.is_auto_checkout);
 
-  // Deep Link Shortcut Handling (?action=checkin|break|wfh|leave)
+  // Deep Link Shortcut Handling (?action=checkin|break|checkout)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const action = params.get('action');
@@ -84,11 +77,11 @@ export default function HomeScreen({ onNavigateHistory }) {
             await resumeBreak();
             setShortcutFeedback('▶️ Resumed work via Shortcut!');
           }
-        } else if (action === 'wfh') {
-          await markWFH();
-          setShortcutFeedback('🏠 Marked WFH via Shortcut!');
-        } else if (action === 'leave') {
-          setLeaveModalOpen(true);
+        } else if (action === 'checkout') {
+          if (status === 'active' || status === 'on_break') {
+            await checkOut();
+            setShortcutFeedback('🚪 Checked out via Shortcut!');
+          }
         }
       } catch (e) {
         console.error('Shortcut action failed:', e);
@@ -108,28 +101,6 @@ export default function HomeScreen({ onNavigateHistory }) {
   const formatISTTime = (iso) => {
     if (!iso) return '';
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const handleModeSwitch = async (mode) => {
-    if (mode === 'leave') {
-      setLeaveModalOpen(true);
-    } else if (mode === 'wfh') {
-      try {
-        await markWFH();
-      } catch (e) {}
-    } else if (mode === 'office') {
-      try {
-        if (workMode === 'wfh') await unmarkWFH();
-        if (isLeave) await unmarkLeave();
-      } catch (e) {}
-    }
-  };
-
-  const handleConfirmLeave = async () => {
-    try {
-      await markLeave(leaveNote);
-      setLeaveModalOpen(false);
-    } catch (e) {}
   };
 
   const targetHours = isWeekend || isExempted ? 0 : (todayData?.settings?.dailyTargetHours || 7);
@@ -209,48 +180,6 @@ export default function HomeScreen({ onNavigateHistory }) {
         </div>
       )}
 
-      {/* 3-Way Work Mode Pill */}
-      <div className="glass-dock rounded-2xl p-1.5 grid grid-cols-3 gap-1.5 shadow-glass border border-white/10">
-        <button
-          type="button"
-          onClick={() => handleModeSwitch('office')}
-          className={`py-2 px-2 rounded-xl font-semibold flex items-center justify-center space-x-1.5 transition-all active-scale ${
-            !isLeave && workMode === 'office'
-              ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/40 ring-1 ring-white/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-          }`}
-        >
-          <Building2 className="w-3.5 h-3.5" />
-          <span className="text-[11px]">Office Floor</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleModeSwitch('wfh')}
-          className={`py-2 px-2 rounded-xl font-semibold flex items-center justify-center space-x-1.5 transition-all active-scale ${
-            !isLeave && workMode === 'wfh'
-              ? 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white shadow-lg shadow-sky-600/40 ring-1 ring-white/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-          }`}
-        >
-          <Home className="w-3.5 h-3.5" />
-          <span className="text-[11px]">WFH</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => handleModeSwitch('leave')}
-          className={`py-2 px-2 rounded-xl font-semibold flex items-center justify-center space-x-1.5 transition-all active-scale ${
-            isLeave
-              ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg shadow-amber-600/40 ring-1 ring-white/20'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-          }`}
-        >
-          <Palmtree className="w-3.5 h-3.5" />
-          <span className="text-[11px]">Leave</span>
-        </button>
-      </div>
-
       {/* LEAVE VIEW */}
       {isLeave ? (
         <div className="p-6 glass-panel rounded-3xl text-center space-y-3.5 shadow-glass border border-amber-500/30">
@@ -269,7 +198,7 @@ export default function HomeScreen({ onNavigateHistory }) {
               <span>Monthly Average Protected</span>
             </p>
             <p className="text-slate-400">
-              Leave days are completely subtracted from the required working days denominator. Zero penalty!
+              Leave days are excluded from your monthly target quota.
             </p>
           </div>
 
@@ -282,11 +211,11 @@ export default function HomeScreen({ onNavigateHistory }) {
               <span>Edit Details</span>
             </button>
             <button
-              onClick={() => unmarkLeave()}
-              disabled={actionLoading}
-              className="flex-1 py-3 rounded-2xl glass-pill hover:bg-white/10 text-slate-200 font-semibold text-xs border border-white/15 active-scale transition-all"
+              onClick={onNavigateHistory}
+              className="flex-1 py-3 rounded-2xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 font-semibold text-xs border border-amber-500/30 active-scale transition-all flex items-center justify-center space-x-1.5"
             >
-              Cancel Leave
+              <CalendarDays className="w-4 h-4" />
+              <span>Calendar Controls →</span>
             </button>
           </div>
         </div>
@@ -308,7 +237,7 @@ export default function HomeScreen({ onNavigateHistory }) {
               <span>Zero-Impact on Monthly Average</span>
             </p>
             <p className="text-slate-400">
-              0 floor hours counted. WFH days are excluded from your required office floor quota, preserving your average.
+              WFH days are exempted from your required floor quota.
             </p>
           </div>
 
@@ -321,11 +250,11 @@ export default function HomeScreen({ onNavigateHistory }) {
               <span>Edit Details</span>
             </button>
             <button
-              onClick={() => handleModeSwitch('office')}
-              disabled={actionLoading}
-              className="flex-1 py-3 rounded-2xl glass-pill hover:bg-white/10 text-slate-200 font-semibold text-xs border border-white/15 active-scale transition-all"
+              onClick={onNavigateHistory}
+              className="flex-1 py-3 rounded-2xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 font-semibold text-xs border border-sky-500/30 active-scale transition-all flex items-center justify-center space-x-1.5"
             >
-              Switch to Office Floor
+              <CalendarDays className="w-4 h-4" />
+              <span>Calendar Controls →</span>
             </button>
           </div>
         </div>
@@ -438,7 +367,7 @@ export default function HomeScreen({ onNavigateHistory }) {
           <div className="glass-panel rounded-3xl p-5 space-y-3.5 shadow-glass border border-white/10 backdrop-blur-2xl">
             <div className="flex items-center justify-between text-xs pb-1 border-b border-white/10">
               <span className="text-slate-400 font-medium">
-                🏢 Floor Status
+                🏢 Office Floor Status
               </span>
               <span className="font-semibold text-slate-200">
                 {status === 'active' && `Working since ${formatISTTime(session?.check_in_time)}`}
@@ -589,58 +518,12 @@ export default function HomeScreen({ onNavigateHistory }) {
             <CalendarDays className="w-5 h-5" />
           </div>
           <div>
-            <h4 className="font-semibold text-white">Monthly Calendar & History</h4>
-            <p className="text-slate-400 text-[11px]">Select any day to view or edit hours, WFH, and leaves</p>
+            <h4 className="font-semibold text-white">Monthly Calendar & Work Modes</h4>
+            <p className="text-slate-400 text-[11px]">Select any date to apply Office Floor, WFH, or Leave</p>
           </div>
         </div>
-        <span className="text-indigo-400 text-xs font-bold">View →</span>
+        <span className="text-indigo-400 text-xs font-bold">Manage in Calendar →</span>
       </button>
-
-      {/* Leave Confirmation Modal */}
-      {leaveModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in text-xs">
-          <div className="w-full max-w-sm glass-panel-elevated rounded-3xl p-6 shadow-2xl space-y-4 border border-white/20">
-            <div className="flex items-center space-x-2.5 text-amber-400">
-              <div className="p-2 rounded-xl bg-amber-500/20 border border-amber-500/30">
-                <Palmtree className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-heading font-bold text-base text-white">Mark Today as Leave</h3>
-                <p className="text-[10px] text-slate-400">Protects your monthly average</p>
-              </div>
-            </div>
-            <p className="text-slate-300 text-[11px]">
-              This will exclude today from your 7-hour daily target so your monthly adherence average remains protected.
-            </p>
-
-            <div>
-              <label className="block text-slate-300 font-medium mb-1.5">Reason / Note</label>
-              <input
-                type="text"
-                value={leaveNote}
-                onChange={(e) => setLeaveNote(e.target.value)}
-                placeholder="e.g. Sick Leave, Vacation, Personal"
-                className="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3.5 py-2.5 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-              />
-            </div>
-
-            <div className="flex space-x-3 pt-2">
-              <button
-                onClick={() => setLeaveModalOpen(false)}
-                className="flex-1 py-3 rounded-2xl glass-pill text-slate-300 font-semibold hover:bg-white/10 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmLeave}
-                className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 text-white font-semibold active-scale shadow-lg shadow-amber-600/30 transition-colors"
-              >
-                Confirm Leave
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Universal Day Editor Modal for Today */}
       {showUniversalEditor && (

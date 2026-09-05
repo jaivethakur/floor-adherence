@@ -8,7 +8,7 @@ import {
   Palmtree
 } from 'lucide-react';
 import { api } from '../services/api';
-import DayDetailModal from '../components/DayDetailModal';
+import UniversalDayEditorModal from '../components/UniversalDayEditorModal';
 
 export default function HistoryScreen() {
   const now = new Date();
@@ -104,7 +104,7 @@ export default function HistoryScreen() {
           <h2 className="font-heading font-black text-base text-white">
             {monthNames[month - 1]} {year}
           </h2>
-          <p className="text-[11px] text-slate-400 font-medium">Monthly Calendar & History</p>
+          <p className="text-[11px] text-slate-400 font-medium">Select any date to edit times or set WFH / Leave</p>
         </div>
 
         <button
@@ -241,15 +241,17 @@ export default function HistoryScreen() {
         </div>
       </div>
 
-      {/* Day Inspector */}
+      {/* Universal Day Editor Modal - Opens Directly on Day Click */}
       {selectedDay && (
-        <DayDetailModal
+        <UniversalDayEditorModal
           isOpen={Boolean(selectedDay)}
           onClose={() => setSelectedDay(null)}
-          dayData={selectedDay}
-          onRefresh={loadMonth}
+          date={selectedDay.date}
+          initialData={selectedDay}
+          onSuccess={loadMonth}
         />
       )}
     </div>
   );
 }
+

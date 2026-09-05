@@ -14,7 +14,6 @@ import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -40,7 +39,6 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
     public static final String ACTION_CHECK_IN = "in.catchabit.time.widget.ACTION_CHECK_IN";
     public static final String ACTION_BREAK = "in.catchabit.time.widget.ACTION_BREAK";
     public static final String ACTION_CHECK_OUT = "in.catchabit.time.widget.ACTION_CHECK_OUT";
-    public static final String ACTION_WFH = "in.catchabit.time.widget.ACTION_WFH";
     public static final String ACTION_REFRESH = "in.catchabit.time.widget.ACTION_REFRESH";
 
     // Official production domain
@@ -145,7 +143,33 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
         }
 
         views.setTextViewText(R.id.tv_widget_synced, "Synced: " + syncTime);
-        views.setTextViewText(R.id.btn_break, breakButtonText);
+
+        // Buttons styling: Disable completely when Weekend, WFH, or Leave
+        if (isExemptedState) {
+            views.setInt(R.id.btn_check_in, "setBackgroundResource", R.drawable.widget_btn_disabled);
+            views.setInt(R.id.btn_break, "setBackgroundResource", R.drawable.widget_btn_disabled);
+            views.setInt(R.id.btn_check_out, "setBackgroundResource", R.drawable.widget_btn_disabled);
+
+            views.setTextColor(R.id.btn_check_in, Color.parseColor("#64748B"));
+            views.setTextColor(R.id.btn_break, Color.parseColor("#64748B"));
+            views.setTextColor(R.id.btn_check_out, Color.parseColor("#64748B"));
+
+            views.setTextViewText(R.id.btn_check_in, "⚡ Off");
+            views.setTextViewText(R.id.btn_break, "☕ Off");
+            views.setTextViewText(R.id.btn_check_out, "🚪 Off");
+        } else {
+            views.setInt(R.id.btn_check_in, "setBackgroundResource", R.drawable.widget_btn_primary);
+            views.setTextColor(R.id.btn_check_in, Color.parseColor("#FFFFFF"));
+            views.setTextViewText(R.id.btn_check_in, "⚡ Check In");
+
+            views.setInt(R.id.btn_break, "setBackgroundResource", R.drawable.widget_btn_amber);
+            views.setTextColor(R.id.btn_break, Color.parseColor("#FBBF24"));
+            views.setTextViewText(R.id.btn_break, breakButtonText);
+
+            views.setInt(R.id.btn_check_out, "setBackgroundResource", R.drawable.widget_btn_slate);
+            views.setTextColor(R.id.btn_check_out, Color.parseColor("#F1F5F9"));
+            views.setTextViewText(R.id.btn_check_out, "🚪 Check Out");
+        }
 
         // Click on Header / Root opens the main app
         Intent openAppIntent = new Intent(context, MainActivity.class);
@@ -177,12 +201,6 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.btn_check_out, PendingIntent.getBroadcast(
                 context, 103, outIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
 
-        // Button 4: WFH
-        Intent wfhIntent = new Intent(context, FloorAdherenceWidget.class);
-        wfhIntent.setAction(ACTION_WFH);
-        views.setOnClickPendingIntent(R.id.btn_wfh, PendingIntent.getBroadcast(
-                context, 104, wfhIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
-
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
@@ -194,7 +212,7 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
         if (action == null) return;
 
         if (ACTION_CHECK_IN.equals(action) || ACTION_BREAK.equals(action) ||
-            ACTION_CHECK_OUT.equals(action) || ACTION_WFH.equals(action)) {
+            ACTION_CHECK_OUT.equals(action)) {
             
             final PendingResult pendingResult = goAsync();
             executor.execute(() -> {
@@ -229,6 +247,25 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
             return;
         }
 
+        // Guard against actions when on Weekend, WFH, or Leave
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("Asia/Kolkata"));
+        int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+        boolean isWeekendToday = (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY);
+        String currentStatus = prefs.getString("today_status", "not_checked_in");
+
+        if (isWeekendToday || "weekend".equals(currentStatus)) {
+            mainHandler.post(() -> Toast.makeText(context, "🌴 Actions disabled on Weekend (Quota Exempted)", Toast.LENGTH_SHORT).show());
+            return;
+        }
+        if ("wfh".equals(currentStatus)) {
+            mainHandler.post(() -> Toast.makeText(context, "🏠 Actions disabled for WFH. Manage via Calendar in App.", Toast.LENGTH_SHORT).show());
+            return;
+        }
+        if ("leave".equals(currentStatus)) {
+            mainHandler.post(() -> Toast.makeText(context, "🏖️ Actions disabled for Leave. Manage via Calendar in App.", Toast.LENGTH_SHORT).show());
+            return;
+        }
+
         try {
             String endpoint = "";
             String jsonBody = "{}";
@@ -239,7 +276,6 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
                 jsonBody = "{\"work_mode\":\"office\"}";
                 successMsg = "⚡ Checked in to Office Floor!";
             } else if (ACTION_BREAK.equals(action)) {
-                String currentStatus = prefs.getString("today_status", "not_checked_in");
                 if ("on_break".equals(currentStatus)) {
                     endpoint = "/api/attendance/break/resume";
                     successMsg = "▶️ Resumed work (Break ended)";
@@ -250,9 +286,6 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
             } else if (ACTION_CHECK_OUT.equals(action)) {
                 endpoint = "/api/attendance/check-out";
                 successMsg = "🚪 Checked out for today";
-            } else if (ACTION_WFH.equals(action)) {
-                endpoint = "/api/attendance/mark-wfh";
-                successMsg = "🏠 Marked as Work From Home";
             }
 
             String response = makeApiPost(API_BASE + endpoint, jsonBody, token);

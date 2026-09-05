@@ -11,7 +11,8 @@ import {
   Palmtree,
   AlertCircle,
   Sparkles,
-  Calendar
+  Calendar,
+  History
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -26,13 +27,14 @@ export default function UniversalDayEditorModal({
   const [checkInTime, setCheckInTime] = useState('09:30');
   const [checkOutTime, setCheckOutTime] = useState('17:00');
   const [breaks, setBreaks] = useState([]);
+  const [edits, setEdits] = useState([]);
   const [leaveReason, setLeaveReason] = useState('Personal Leave');
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  // Convert ISO string to HH:MM in local IST
+  // Convert ISO string to HH:MM in IST
   const isoToHHMM = (isoStr) => {
     if (!isoStr) return '';
     const d = new Date(isoStr);
@@ -70,15 +72,15 @@ export default function UniversalDayEditorModal({
 
     if (session) {
       setCheckInTime(isoToHHMM(session.check_in_time) || '09:30');
-      setCheckOutTime(isoToHHMM(session.check_out_time) || '');
+      setCheckOutTime(isoToHHMM(session.check_out_time) || '17:00');
     } else {
       setCheckInTime('09:30');
       setCheckOutTime('17:00');
     }
 
-    // Load full breaks if session exists
+    // Load full details & breaks if session exists
     if (session?.id) {
-      loadBreaks(session.id);
+      loadSessionDetails(session.id);
     } else if (initialData?.breaks) {
       setBreaks(
         initialData.breaks.map((b) => ({
@@ -87,12 +89,14 @@ export default function UniversalDayEditorModal({
           end: isoToHHMM(b.break_end),
         }))
       );
+      setEdits([]);
     } else {
       setBreaks([]);
+      setEdits([]);
     }
   }, [isOpen, date, initialData]);
 
-  const loadBreaks = async (sessionId) => {
+  const loadSessionDetails = async (sessionId) => {
     try {
       setLoadingDetails(true);
       const res = await api.request(`/api/attendance/session-detail?sessionId=${sessionId}`);
@@ -110,6 +114,9 @@ export default function UniversalDayEditorModal({
       }
       if (res?.session?.check_out_time) {
         setCheckOutTime(isoToHHMM(res.session.check_out_time));
+      }
+      if (res?.edits) {
+        setEdits(res.edits);
       }
     } catch (e) {
       console.error('Failed to load session details', e);
@@ -197,7 +204,7 @@ export default function UniversalDayEditorModal({
       let payload = {
         date,
         workMode,
-        reason: note.trim() || 'Day Attendance Logged/Updated',
+        reason: note.trim() || 'Calendar Attendance Update',
       };
 
       if (workMode === 'leave') {
@@ -254,7 +261,7 @@ export default function UniversalDayEditorModal({
         body: JSON.stringify({
           date,
           workMode: 'clear',
-          reason: 'Cleared by user',
+          reason: 'Cleared by user from Calendar',
         }),
       });
 
@@ -293,7 +300,7 @@ export default function UniversalDayEditorModal({
                   {dayOfWeekName} {isWeekend && '🌴'}
                 </span>
               </div>
-              <p className="text-slate-400 text-[11px] mt-0.5">Universal Day Attendance Editor</p>
+              <p className="text-slate-400 text-[11px] mt-0.5">Apply Work Mode & Edit Check-In / Check-Out</p>
             </div>
           </div>
           <button
@@ -315,7 +322,9 @@ export default function UniversalDayEditorModal({
         <div className="py-4 space-y-4 overflow-y-auto flex-1 pr-1">
           {/* 3-Way Mode Segmented Pill */}
           <div>
-            <label className="block text-slate-300 font-semibold mb-2">Work Mode / Exemption</label>
+            <label className="block text-slate-300 font-semibold mb-2">
+              Select Attendance Option for {date}
+            </label>
             <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950/60 rounded-2xl border border-white/10">
               <button
                 type="button"
@@ -364,8 +373,13 @@ export default function UniversalDayEditorModal({
               <Home className="w-8 h-8 text-sky-400 mx-auto animate-pulse" />
               <h4 className="font-heading font-bold text-sm text-white">Work From Home (Exempted)</h4>
               <p className="text-slate-300 text-[11px]">
-                0 floor hours will be counted. This day is <strong>excluded from your 7-hour daily requirement</strong>, preserving your monthly average adherence.
+                0 floor hours counted. This day is <strong>excluded from your 7-hour daily requirement</strong>, preserving your monthly average adherence.
               </p>
+              <div className="pt-2">
+                <span className="px-3 py-1 rounded-xl bg-sky-500/20 text-sky-300 font-semibold text-[11px]">
+                  ✓ Zero impact on monthly quota
+                </span>
+              </div>
             </div>
           )}
 
@@ -376,7 +390,7 @@ export default function UniversalDayEditorModal({
                 <Palmtree className="w-8 h-8 text-amber-400 mx-auto animate-pulse mb-1" />
                 <h4 className="font-heading font-bold text-sm text-white">Marked as Leave (Exempted)</h4>
                 <p className="text-slate-400 text-[11px]">
-                  Excluded from required monthly work days. Zero impact on average!
+                  Excluded from required monthly work days. Zero penalty!
                 </p>
               </div>
 
@@ -419,7 +433,6 @@ export default function UniversalDayEditorModal({
                     type="time"
                     value={checkOutTime}
                     onChange={(e) => setCheckOutTime(e.target.value)}
-                    placeholder="Leave blank if in progress"
                     className="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
@@ -444,7 +457,7 @@ export default function UniversalDayEditorModal({
 
                 {breaks.length === 0 ? (
                   <p className="text-slate-500 text-[11px] italic text-center py-2">
-                    No breaks added. Tap "+ Add Break" if you took breaks.
+                    No breaks added. Tap "+ Add Break" if breaks were taken.
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -529,14 +542,32 @@ export default function UniversalDayEditorModal({
             </div>
           )}
 
+          {/* Audit Trail (if edits exist) */}
+          {edits.length > 0 && (
+            <div className="p-3 bg-slate-800/30 rounded-2xl border border-white/10 space-y-1.5">
+              <span className="text-[11px] font-semibold text-slate-300 flex items-center space-x-1">
+                <History className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Previous Edits ({edits.length})</span>
+              </span>
+              <div className="space-y-1">
+                {edits.slice(-2).map((e) => (
+                  <div key={e.id} className="text-[10px] text-slate-400 flex justify-between">
+                    <span>{e.reason || 'User Update'}</span>
+                    <span className="text-slate-500">{new Date(e.created_at).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Audit Note */}
           <div>
-            <label className="block text-slate-400 font-medium mb-1">Audit Note / Reason (Optional)</label>
+            <label className="block text-slate-400 font-medium mb-1">Reason / Note (Optional)</label>
             <input
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. Corrected forgot check-out time, doctor visit..."
+              placeholder="e.g. Edited past day check-in, doctor appointment..."
               className="w-full bg-slate-950/80 border border-white/10 rounded-xl px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-xs"
             />
           </div>
@@ -574,7 +605,7 @@ export default function UniversalDayEditorModal({
               className="py-2.5 px-5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold flex items-center space-x-1.5 shadow-lg shadow-indigo-600/40 transition-all disabled:opacity-50"
             >
               <Check className="w-4 h-4" />
-              <span>{submitting ? 'Saving...' : 'Save Changes'}</span>
+              <span>{submitting ? 'Saving...' : 'Apply to Day'}</span>
             </button>
           </div>
         </div>
