@@ -59,16 +59,31 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const secret = env.JWT_SECRET || 'catchabit_floor_hours_jwt_secret_token_key_2026';
 
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
   // Handle CORS Preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
+      status: 204,
+      headers: corsHeaders,
     });
   }
+
+  const withCors = (res) => {
+    const newHeaders = new Headers(res.headers);
+    newHeaders.set('Access-Control-Allow-Origin', '*');
+    newHeaders.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    newHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: newHeaders,
+    });
+  };
 
   // Public Routes Bypass
   if (
@@ -76,7 +91,8 @@ export async function onRequest(context) {
     url.pathname.endsWith('/api/auth/register') ||
     url.pathname.endsWith('/api/health')
   ) {
-    return await context.next();
+    const response = await context.next();
+    return withCors(response);
   }
 
   // Extract Auth Token
@@ -93,21 +109,22 @@ export async function onRequest(context) {
   }
 
   if (!token) {
-    return new Response(JSON.stringify({ error: 'Unauthorized. Please log in.' }), {
+    return withCors(new Response(JSON.stringify({ error: 'Unauthorized. Please log in.' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
-    });
+    }));
   }
 
   const user = await verifyJWT(token, secret);
   if (!user) {
-    return new Response(JSON.stringify({ error: 'Session expired or invalid. Please log in again.' }), {
+    return withCors(new Response(JSON.stringify({ error: 'Session expired or invalid. Please log in again.' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
-    });
+    }));
   }
 
   // All authenticated users have full access across the app
   context.data.user = user;
-  return await context.next();
+  const response = await context.next();
+  return withCors(response);
 }

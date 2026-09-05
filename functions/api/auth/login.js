@@ -1,4 +1,5 @@
 import { signJWT } from '../_middleware.js';
+import { jsonResponse } from '../_helpers.js';
 
 // Helper function to hash password with SHA-256
 async function hashPassword(password) {
@@ -17,10 +18,7 @@ export async function onRequestPost(context) {
     const { email, password } = await request.json();
 
     if (!email || !password) {
-      return new Response(JSON.stringify({ error: 'Email and password are required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ error: 'Email and password are required' }, 400);
     }
 
     const cleanEmail = email.toLowerCase().trim();
@@ -83,10 +81,7 @@ export async function onRequestPost(context) {
     }
 
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Invalid email address or password.' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ error: 'Invalid email address or password.' }, 401);
     }
 
     // Generate JWT (valid for 30 days)
@@ -101,24 +96,18 @@ export async function onRequestPost(context) {
       secret
     );
 
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      {
         message: 'Login successful',
         token,
         user,
-      }),
+      },
+      200,
       {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Set-Cookie': `ca_time_token=${token}; Path=/; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax`,
-        },
+        'Set-Cookie': `ca_time_token=${token}; Path=/; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax`,
       }
     );
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message || 'Login failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: err.message || 'Login failed' }, 500);
   }
 }
