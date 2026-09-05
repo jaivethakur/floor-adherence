@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Floor Adherence</string>
+    <string name="title_activity_main">Floor Adherence</string>
+    <string name="package_name">in.catchabit.time</string>
+    <string name="custom_url_scheme">in.catchabit.time</string>
+    <string name="widget_description">Floor Adherence live floor timer and 1-tap quick actions</string>
+</resources>

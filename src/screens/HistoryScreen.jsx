@@ -89,24 +89,24 @@ export default function HistoryScreen() {
   return (
     <div className="space-y-4 animate-fade-in pb-12 text-xs">
       {/* Month Picker Header */}
-      <div className="flex items-center justify-between bg-slate-900/80 border border-slate-800/80 rounded-2xl p-3">
+      <div className="flex items-center justify-between glass-dock rounded-3xl p-3 border border-white/10 shadow-glass">
         <button
           onClick={handlePrevMonth}
-          className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 active-scale transition-colors"
+          className="p-2.5 rounded-2xl glass-pill hover:bg-white/10 text-slate-300 active-scale transition-all"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
 
         <div className="text-center">
-          <h2 className="font-heading font-bold text-base text-white">
+          <h2 className="font-heading font-black text-base text-white">
             {monthNames[month - 1]} {year}
           </h2>
-          <p className="text-[11px] text-slate-400">Monthly Calendar & History</p>
+          <p className="text-[11px] text-slate-400 font-medium">Monthly Calendar & History</p>
         </div>
 
         <button
           onClick={handleNextMonth}
-          className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 active-scale transition-colors"
+          className="p-2.5 rounded-2xl glass-pill hover:bg-white/10 text-slate-300 active-scale transition-all"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -115,19 +115,19 @@ export default function HistoryScreen() {
       {/* Month Overview Stats */}
       {monthData?.metrics && (
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="p-3 bg-slate-900/60 border border-slate-800/60 rounded-2xl">
-            <span className="text-slate-400 text-[10px] block">Monthly Avg</span>
-            <span className={`font-heading font-extrabold text-lg tabular-nums ${
-              monthData.metrics.monthlyAverage >= 7 ? 'text-emerald-400' : 'text-amber-400'
+          <div className="p-3.5 glass-panel border border-white/10 rounded-3xl shadow-glass">
+            <span className="text-slate-400 text-[10px] block font-medium">Monthly Avg</span>
+            <span className={`font-heading font-black text-xl tabular-nums ${
+              monthData.metrics.monthlyAverage >= 7 ? 'text-emerald-400 text-glow-emerald' : 'text-amber-400'
             }`}>
               {monthData.metrics.monthlyAverage}h
             </span>
             <span className="text-[10px] text-slate-500 block">per work day</span>
           </div>
 
-          <div className="p-3 bg-slate-900/60 border border-slate-800/60 rounded-2xl">
-            <span className="text-slate-400 text-[10px] block">Total Worked</span>
-            <span className="font-heading font-extrabold text-lg text-white tabular-nums">
+          <div className="p-3.5 glass-panel border border-white/10 rounded-3xl shadow-glass">
+            <span className="text-slate-400 text-[10px] block font-medium">Total Worked</span>
+            <span className="font-heading font-black text-xl text-white tabular-nums">
               {monthData.metrics.totalFloorHours}h
             </span>
             <span className="text-[10px] text-slate-500 block">
@@ -135,10 +135,10 @@ export default function HistoryScreen() {
             </span>
           </div>
 
-          <div className="p-3 bg-slate-900/60 border border-slate-800/60 rounded-2xl">
-            <span className="text-slate-400 text-[10px] block">Leaves Taken</span>
-            <span className="font-heading font-extrabold text-lg text-amber-400 tabular-nums">
-              {monthData.metrics.totalLeaveDays || 0}
+          <div className="p-3.5 glass-panel border border-white/10 rounded-3xl shadow-glass">
+            <span className="text-slate-400 text-[10px] block font-medium">Leaves / WFH</span>
+            <span className="font-heading font-black text-xl text-sky-400 tabular-nums">
+              {(monthData.metrics.totalLeaveDays || 0) + (monthData.metrics.wfhDaysElapsed || 0)}
             </span>
             <span className="text-[10px] text-slate-500 block">excluded from quota</span>
           </div>
@@ -159,6 +159,10 @@ export default function HistoryScreen() {
           <span className="w-2.5 h-2.5 rounded bg-rose-500/20 border border-rose-500/50" />
           <span>Short</span>
         </div>
+        <div className="flex items-center space-x-1 text-sky-400">
+          <Home className="w-3 h-3" />
+          <span>WFH (0h)</span>
+        </div>
         <div className="flex items-center space-x-1 text-amber-400">
           <Palmtree className="w-3 h-3" />
           <span>Leave</span>
@@ -166,9 +170,9 @@ export default function HistoryScreen() {
       </div>
 
       {/* Calendar Grid */}
-      <div className="bg-slate-900/80 border border-slate-800/80 rounded-3xl p-4">
+      <div className="glass-panel border border-white/10 rounded-3xl p-4 shadow-glass">
         {/* Day-of-week headers */}
-        <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-slate-400 pb-2 mb-2 border-b border-slate-800/60">
+        <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-slate-400 pb-2 mb-2 border-b border-white/10">
           <div>Sun</div>
           <div>Mon</div>
           <div>Tue</div>
@@ -181,24 +185,24 @@ export default function HistoryScreen() {
         {/* Days cells */}
         <div className="grid grid-cols-7 gap-1.5">
           {emptyDaysLeading.map(idx => (
-            <div key={`lead-${idx}`} className="h-14 rounded-xl opacity-0" />
+            <div key={`lead-${idx}`} className="h-14 rounded-2xl opacity-0" />
           ))}
 
           {monthData?.days?.map((day) => (
             <button
               key={day.date}
               onClick={() => setSelectedDay(day)}
-              className={`h-14 p-1 rounded-xl border flex flex-col items-center justify-between text-left active-scale transition-all ${getDayStatusStyle(
+              className={`h-14 p-1.5 rounded-2xl border flex flex-col items-center justify-between text-left active-scale transition-all ${getDayStatusStyle(
                 day
-              )} ${day.isToday ? 'ring-2 ring-indigo-500' : ''}`}
+              )} ${day.isToday ? 'ring-2 ring-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]' : ''}`}
             >
               <div className="w-full flex items-center justify-between text-[11px]">
-                <span className={`font-semibold ${day.isToday ? 'text-indigo-400 font-bold' : ''}`}>
+                <span className={`font-semibold ${day.isToday ? 'text-indigo-300 font-bold' : ''}`}>
                   {day.day}
                 </span>
                 {day.statusType === 'leave' ? (
-                  <Palmtree className="w-3 h-3 text-amber-400" />
-                ) : day.workMode === 'wfh' ? (
+                  <Palmtree className="w-3 h-3 text-amber-400 animate-pulse" />
+                ) : day.statusType === 'wfh' || day.workMode === 'wfh' ? (
                   <Home className="w-3 h-3 text-sky-400" />
                 ) : day.session ? (
                   <Building2 className="w-3 h-3 text-current opacity-70" />

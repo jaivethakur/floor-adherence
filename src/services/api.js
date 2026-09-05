@@ -87,17 +87,25 @@ function saveMockDB(db) {
   } catch (e) {}
 }
 
+import { Preferences } from '@capacitor/preferences';
+
 class ApiService {
   constructor() {
     this.token = localStorage.getItem('ca_time_token') || null;
+    // Also sync on init
+    if (this.token) {
+      Preferences.set({ key: 'ca_time_token', value: this.token }).catch(() => {});
+    }
   }
 
   setToken(t) {
     this.token = t;
     if (t) {
       localStorage.setItem('ca_time_token', t);
+      Preferences.set({ key: 'ca_time_token', value: t }).catch(() => {});
     } else {
       localStorage.removeItem('ca_time_token');
+      Preferences.remove({ key: 'ca_time_token' }).catch(() => {});
     }
   }
 
@@ -431,6 +439,8 @@ class ApiService {
       let elapsedCalendarWorkingDays = 0;
       let leaveDaysElapsed = 0;
       let leaveDaysFuture = 0;
+      let wfhDaysElapsed = 0;
+      let wfhDaysFuture = 0;
       let remainingCalendarWorkingDays = 0;
       let officeDaysCount = 0;
       let wfhDaysCount = 0;
@@ -459,9 +469,12 @@ class ApiService {
         if (isLeave) {
           if ((isPast || isToday) && isWorking) leaveDaysElapsed++;
           if (isFuture && isWorking) leaveDaysFuture++;
+        } else if (isWFH) {
+          if ((isPast || isToday) && isWorking) wfhDaysElapsed++;
+          if (isFuture && isWorking) wfhDaysFuture++;
+          wfhDaysCount++;
         } else if (session) {
-          if (isWFH) wfhDaysCount++;
-          else officeDaysCount++;
+          officeDaysCount++;
         }
 
         let floorSec = 0;
@@ -507,16 +520,18 @@ class ApiService {
           floorHours: Math.round((floorSec / 3600) * 100) / 100,
           floorSeconds: floorSec,
           breakSeconds: breakSec,
-          targetHours: isWorking && !isLeave ? targetHours : 0,
+          targetHours: isWorking && !isLeave && !isWFH ? targetHours : 0,
         });
       }
 
-      const effectiveWorkingDaysElapsed = Math.max(0, elapsedCalendarWorkingDays - leaveDaysElapsed);
-      const effectiveRemainingWorkingDays = Math.max(0, remainingCalendarWorkingDays - leaveDaysFuture);
-      const totalWorkingDaysInMonth = Math.max(0, calendarWorkingDays - (leaveDaysElapsed + leaveDaysFuture));
+      const effectiveWorkingDaysElapsed = Math.max(0, elapsedCalendarWorkingDays - (leaveDaysElapsed + wfhDaysElapsed));
+      const effectiveRemainingWorkingDays = Math.max(0, remainingCalendarWorkingDays - (leaveDaysFuture + wfhDaysFuture));
+      const totalWorkingDaysInMonth = Math.max(0, calendarWorkingDays - (leaveDaysElapsed + leaveDaysFuture + wfhDaysElapsed + wfhDaysFuture));
 
       const totalFloorHours = Math.round((totalFloorSec / 3600) * 100) / 100;
-      const monthlyAverage = effectiveWorkingDaysElapsed > 0 ? Math.round((totalFloorHours / effectiveWorkingDaysElapsed) * 100) / 100 : 0;
+      const monthlyAverage = effectiveWorkingDaysElapsed > 0
+        ? Math.round((totalFloorHours / effectiveWorkingDaysElapsed) * 100) / 100
+        : (totalFloorHours > 0 ? totalFloorHours : targetHours);
       const targetHoursSoFar = Math.round((effectiveWorkingDaysElapsed * targetHours) * 100) / 100;
       const shortfallHours = Math.max(0, Math.round((targetHoursSoFar - totalFloorHours) * 100) / 100);
       const surplusHours = Math.max(0, Math.round((totalFloorHours - targetHoursSoFar) * 100) / 100);

@@ -75,6 +75,8 @@ export async function onRequestGet(context) {
     let remainingCalendarWorkingDays = 0;
     let leaveDaysElapsed = 0;
     let leaveDaysFuture = 0;
+    let wfhDaysElapsed = 0;
+    let wfhDaysFuture = 0;
     let totalFloorSeconds = 0;
     let officeDaysCount = 0;
     let wfhDaysCount = 0;
@@ -132,13 +134,13 @@ export async function onRequestGet(context) {
       if (isLeave) {
         if (isElapsed && working) leaveDaysElapsed++;
         if (isFuture && working) leaveDaysFuture++;
+      } else if (isWFH) {
+        if (isElapsed && working) wfhDaysElapsed++;
+        if (isFuture && working) wfhDaysFuture++;
+        wfhDaysCount++;
       } else if (session) {
-        if (isWFH) {
-          wfhDaysCount++;
-        } else {
-          totalFloorSeconds += floorSeconds;
-          officeDaysCount++;
-        }
+        totalFloorSeconds += floorSeconds;
+        officeDaysCount++;
       }
 
       let statusType = 'off';
@@ -185,19 +187,19 @@ export async function onRequestGet(context) {
         floorSeconds,
         breakSeconds: stats.breakSeconds,
         floorHours,
-        targetHours: working && !isLeave ? dailyTargetHours : 0,
+        targetHours: working && !isLeave && !isWFH ? dailyTargetHours : 0,
       });
     }
 
-    // 5. Fair Shortfall & Average Computations (Leaves are excluded from denominator!)
-    const effectiveWorkingDaysElapsed = Math.max(0, elapsedCalendarWorkingDays - leaveDaysElapsed);
-    const effectiveRemainingWorkingDays = Math.max(0, remainingCalendarWorkingDays - leaveDaysFuture);
-    const totalWorkingDaysInMonth = Math.max(0, calendarWorkingDays - (leaveDaysElapsed + leaveDaysFuture));
+    // 5. Fair Shortfall & Average Computations (Leaves AND WFH are excluded from denominator so WFH does not drag down average!)
+    const effectiveWorkingDaysElapsed = Math.max(0, elapsedCalendarWorkingDays - (leaveDaysElapsed + wfhDaysElapsed));
+    const effectiveRemainingWorkingDays = Math.max(0, remainingCalendarWorkingDays - (leaveDaysFuture + wfhDaysFuture));
+    const totalWorkingDaysInMonth = Math.max(0, calendarWorkingDays - (leaveDaysElapsed + leaveDaysFuture + wfhDaysElapsed + wfhDaysFuture));
 
     const totalFloorHours = Math.round((totalFloorSeconds / 3600) * 100) / 100;
     const monthlyAverage = effectiveWorkingDaysElapsed > 0
       ? Math.round((totalFloorHours / effectiveWorkingDaysElapsed) * 100) / 100
-      : 0;
+      : (totalFloorHours > 0 ? totalFloorHours : dailyTargetHours);
 
     const targetHoursSoFar = Math.round((effectiveWorkingDaysElapsed * dailyTargetHours) * 100) / 100;
     const shortfallHours = Math.max(0, Math.round((targetHoursSoFar - totalFloorHours) * 100) / 100);
@@ -235,6 +237,9 @@ export async function onRequestGet(context) {
         leaveDaysElapsed,
         leaveDaysFuture,
         totalLeaveDays: leaveDaysElapsed + leaveDaysFuture,
+        wfhDaysElapsed,
+        wfhDaysFuture,
+        totalWfhDays: wfhDaysElapsed + wfhDaysFuture,
         officeDaysCount,
         wfhDaysCount,
         totalFloorHours,

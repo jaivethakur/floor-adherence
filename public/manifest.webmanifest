@@ -28,5 +28,35 @@
       "type": "image/svg+xml",
       "purpose": "any"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Check In (Office)",
+      "short_name": "Check In",
+      "description": "Quickly check in to the office floor",
+      "url": "/?action=checkin",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Take Break",
+      "short_name": "Break",
+      "description": "Start a coffee or meal break",
+      "url": "/?action=break",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mark WFH",
+      "short_name": "WFH",
+      "description": "Mark today as Work From Home",
+      "url": "/?action=wfh",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mark Leave",
+      "short_name": "Leave",
+      "description": "Mark today as Leave",
+      "url": "/?action=leave",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "appId": "in.catchabit.time",
+  "appName": "Floor Adherence",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

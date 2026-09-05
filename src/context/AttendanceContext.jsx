@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { Preferences } from '@capacitor/preferences';
 import { api } from '../services/api';
 import { useAuth } from './AuthContext';
 
@@ -22,6 +23,13 @@ export function AttendanceProvider({ children }) {
       if (res?.stats) {
         setLiveFloorSeconds(res.stats.floorSeconds || 0);
         setLiveBreakSeconds(res.stats.breakSeconds || 0);
+
+        // Sync to Preferences for Android Widget
+        const floorH = ((res.stats.floorSeconds || 0) / 3600).toFixed(2);
+        const wMode = res.workMode || 'office';
+        const st = res.isLeave ? 'leave' : (wMode === 'wfh' ? 'wfh' : (res.session?.status || 'not_checked_in'));
+        Preferences.set({ key: 'today_status', value: st }).catch(() => {});
+        Preferences.set({ key: 'today_floor_hours', value: floorH }).catch(() => {});
       }
     } catch (err) {
       setError(err.message);
