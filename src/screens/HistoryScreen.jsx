@@ -90,7 +90,7 @@ export default function HistoryScreen() {
   const emptyDaysLeading = Array.from({ length: firstDayOfMonth }, (_, i) => i);
 
   return (
-    <div className="space-y-4 animate-fade-in pb-32 text-xs">
+    <div className="space-y-4 animate-fade-in pb-safe-nav text-sm">
       {/* Month Picker Header */}
       <div className="flex items-center justify-between glass-dock rounded-3xl p-3 border border-white/10 shadow-glass">
         <button
@@ -149,7 +149,7 @@ export default function HistoryScreen() {
       )}
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-1 px-2 text-[10px] text-slate-400">
+      <div className="flex items-center gap-3 px-1 text-[11px] text-slate-400 overflow-x-auto no-scrollbar">
         <div className="flex items-center space-x-1">
           <span className="w-2.5 h-2.5 rounded bg-emerald-500/20 border border-emerald-500/50" />
           <span>7h+ Met</span>
@@ -191,14 +191,14 @@ export default function HistoryScreen() {
         {/* Days cells */}
         <div className="grid grid-cols-7 gap-1.5">
           {emptyDaysLeading.map(idx => (
-            <div key={`lead-${idx}`} className="h-14 rounded-2xl opacity-0" />
+            <div key={`lead-${idx}`} className="h-16 rounded-2xl opacity-0" />
           ))}
 
           {monthData?.days?.map((day) => (
             <button
               key={day.date}
               onClick={() => setSelectedDay(day)}
-              className={`h-14 p-1.5 rounded-2xl border flex flex-col items-center justify-between text-left active-scale transition-all ${getDayStatusStyle(
+              className={`h-16 p-1.5 rounded-2xl border flex flex-col items-center justify-between text-left active-scale transition-all ${getDayStatusStyle(
                 day
               )} ${day.isToday ? 'ring-2 ring-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.5)]' : ''}`}
             >

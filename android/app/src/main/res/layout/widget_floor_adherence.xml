@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="12dp"
+    android:padding="14dp"
     android:background="@drawable/widget_background">
 
-    <!-- Top Header: App Icon, Brand, Live Status Badge & Refresh -->
+    <!-- Top Header Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -15,8 +15,8 @@
         android:gravity="center_vertical">
 
         <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:src="@mipmap/ic_launcher"
             android:contentDescription="@string/app_name" />
 
@@ -24,10 +24,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="6dp"
             android:text="Floor Adherence"
-            android:textColor="#FFFFFF"
-            android:textSize="13sp"
+            android:textColor="#94A3B8"
+            android:textSize="11sp"
             android:textStyle="bold" />
 
         <!-- Status Badge -->
@@ -36,138 +36,156 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/widget_badge_ready"
-            android:paddingHorizontal="9dp"
-            android:paddingVertical="3dp"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
             android:text="⚡ READY"
             android:textColor="#A78BFA"
-            android:textSize="10sp"
+            android:textSize="9sp"
             android:textStyle="bold" />
 
-        <!-- Refresh Button -->
+        <!-- Refresh -->
         <TextView
             android:id="@+id/btn_widget_refresh"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="5dp"
             android:background="@drawable/widget_btn_refresh"
-            android:paddingHorizontal="7dp"
+            android:paddingHorizontal="6dp"
             android:paddingVertical="2dp"
             android:text="↻"
-            android:textColor="#CBD5E1"
-            android:textSize="12sp"
+            android:textColor="#64748B"
+            android:textSize="11sp"
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Center Hero Section: 2-Column Balanced Dashboard -->
+    <!-- Hero Section: Time + Stats -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:gravity="center_vertical"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="6dp">
+        android:layout_marginTop="4dp">
 
-        <!-- Column 1: Big Time Display -->
+        <!-- Big Time Row -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1.2"
-            android:orientation="vertical"
-            android:gravity="center_vertical">
+            android:orientation="horizontal"
+            android:gravity="bottom">
 
+            <TextView
+                android:id="@+id/tv_floor_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.00"
+                android:textColor="#FFFFFF"
+                android:textSize="34sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:layout_marginBottom="5dp"
+                android:text="hrs"
+                android:textColor="#818CF8"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <!-- Spacer -->
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Inline Stats -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="bottom">
+                android:orientation="vertical"
+                android:gravity="end"
+                android:layout_marginBottom="5dp">
 
                 <TextView
-                    android:id="@+id/tv_floor_time"
+                    android:id="@+id/tv_widget_breaks"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0.00"
-                    android:textColor="#FFFFFF"
-                    android:textSize="30sp"
-                    android:textStyle="bold" />
+                    android:text="☕ 0.00h break"
+                    android:textColor="#FBBF24"
+                    android:textSize="10sp" />
 
                 <TextView
+                    android:id="@+id/tv_widget_shortfall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="3dp"
-                    android:layout_marginBottom="4dp"
-                    android:text="hrs"
-                    android:textColor="#818CF8"
-                    android:textSize="14sp"
+                    android:text="⚡ 7.00h left"
+                    android:textColor="#F87171"
+                    android:textSize="10sp"
                     android:textStyle="bold" />
             </LinearLayout>
+        </LinearLayout>
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progress_floor"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="6dp"
+            android:layout_marginTop="6dp"
+            android:max="100"
+            android:progress="0"
+            android:progressDrawable="@drawable/widget_progress_bar"
+            android:background="@drawable/widget_progress_bg" />
+
+        <!-- Sub-info row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="3dp">
 
             <TextView
                 android:id="@+id/tv_target_subtext"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Target: 7.0h floor quota"
-                android:textColor="#94A3B8"
-                android:textSize="10sp" />
-
-            <TextView
-                android:id="@+id/tv_widget_subtext"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="1dp"
-                android:text="Tap action below to update"
+                android:layout_weight="1"
+                android:text="Target: 7.0h"
                 android:textColor="#64748B"
                 android:textSize="9sp" />
-        </LinearLayout>
-
-        <!-- Column 2: Frosted Stats Sub-Card -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:background="@drawable/widget_card_glass"
-            android:paddingHorizontal="9dp"
-            android:paddingVertical="7dp">
-
-            <TextView
-                android:id="@+id/tv_widget_breaks"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="☕ Break: 00h 00m"
-                android:textColor="#FBBF24"
-                android:textSize="10sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tv_widget_shortfall"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="⚡ Shortfall: 7.00h"
-                android:textColor="#F87171"
-                android:textSize="10sp"
-                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_widget_synced"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
                 android:text="Synced: --:--"
-                android:textColor="#64748B"
+                android:textColor="#475569"
                 android:textSize="9sp" />
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Bottom Actions: 3 Touch Action Pills (In, Break/Resume, Out) -->
-    <LinearLayout
+    <!-- Completed State (hidden by default, shown when checked out) -->
+    <TextView
+        android:id="@+id/tv_completed_state"
         android:layout_width="match_parent"
-        android:layout_height="35dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:layout_height="32dp"
+        android:gravity="center"
+        android:background="@drawable/widget_badge_green"
+        android:text="✓ Done for today"
+        android:textColor="#34D399"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
-        <!-- Check In Button -->
+    <!-- Bottom Action Buttons -->
+    <LinearLayout
+        android:id="@+id/btn_container"
+        android:layout_width="match_parent"
+        android:layout_height="34dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="4dp">
+
         <TextView
             android:id="@+id/btn_check_in"
             android:layout_width="0dp"
@@ -181,7 +199,6 @@
             android:textSize="11sp"
             android:textStyle="bold" />
 
-        <!-- Break Button -->
         <TextView
             android:id="@+id/btn_break"
             android:layout_width="0dp"
@@ -194,9 +211,9 @@
             android:text="☕ Break"
             android:textColor="#FBBF24"
             android:textSize="11sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
 
-        <!-- Check Out Button -->
         <TextView
             android:id="@+id/btn_check_out"
             android:layout_width="0dp"
@@ -208,7 +225,15 @@
             android:text="🚪 Check Out"
             android:textColor="#F1F5F9"
             android:textSize="11sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
     </LinearLayout>
+
+    <!-- Hidden subtext field for internal use -->
+    <TextView
+        android:id="@+id/tv_widget_subtext"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:visibility="gone" />
 
 </LinearLayout>

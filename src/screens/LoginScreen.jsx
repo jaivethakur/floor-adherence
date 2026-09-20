@@ -61,7 +61,13 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center px-4 pt-12 pb-8 max-w-md mx-auto">
+    <div className="min-h-screen flex flex-col justify-center px-4 pt-12 pb-8 max-w-md mx-auto relative z-10">
+      {/* Ambient Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute w-80 h-80 -top-20 -left-20 rounded-full bg-indigo-600/20 blur-[100px] animate-float-slow" />
+        <div className="absolute w-96 h-96 top-1/2 -right-28 rounded-full bg-violet-600/15 blur-[120px] animate-float-delayed" />
+      </div>
+
       {/* App Branding */}
       <div className="text-center mb-6">
         <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 mx-auto flex items-center justify-center shadow-xl shadow-indigo-600/30 ring-1 ring-white/20 mb-3">
@@ -76,9 +82,9 @@ export default function LoginScreen() {
       </div>
 
       {/* Main Card */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl backdrop-blur-md">
+      <div className="glass-panel-elevated rounded-3xl p-6 shadow-glass border border-white/15 animate-fade-in">
         {/* Toggle Mode: Sign In vs Create Account */}
-        <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-1 grid grid-cols-2 gap-1 mb-5">
+        <div className="glass-panel rounded-2xl p-1 grid grid-cols-2 gap-1 mb-5 border border-white/10">
           <button
             type="button"
             onClick={() => {
@@ -133,7 +139,7 @@ export default function LoginScreen() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Alex Johnson"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all backdrop-blur-sm"
                 />
               </div>
             </div>
@@ -151,7 +157,7 @@ export default function LoginScreen() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all backdrop-blur-sm"
               />
             </div>
           </div>
@@ -168,7 +174,7 @@ export default function LoginScreen() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter password'}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-10 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all backdrop-blur-sm"
               />
               <button
                 type="button"
@@ -193,7 +199,7 @@ export default function LoginScreen() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repeat your password"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all backdrop-blur-sm"
                 />
               </div>
             </div>
@@ -233,7 +239,7 @@ export default function LoginScreen() {
         </div>
       </div>
 
-      <div className="mt-8 text-center text-xs text-slate-500">
+      <div className="mt-8 text-center text-xs text-slate-500 glass-pill rounded-2xl p-3 border border-white/5">
         <p>Timezone: Asia/Kolkata (IST)</p>
         <p className="mt-0.5">Floor target: 7 hours daily on office floor</p>
       </div>

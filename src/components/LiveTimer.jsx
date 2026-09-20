@@ -68,7 +68,7 @@ export default function LiveTimer({
       />
 
       {/* Circular Holographic Timer Ring */}
-      <div className="relative w-52 h-52 sm:w-56 sm:h-56 flex items-center justify-center my-1">
+      <div className="relative w-52 h-52 sm:w-60 sm:h-60 flex items-center justify-center my-1">
         <svg className="w-full h-full transform -rotate-90 filter drop-shadow-[0_0_16px_rgba(99,102,241,0.25)]" viewBox="0 0 200 200">
           <defs>
             <linearGradient id="timerGradientIndigo" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -189,7 +189,7 @@ export default function LiveTimer({
           </div>
 
           {/* Primary Digital Time Display */}
-          <div className="font-heading font-black text-3xl sm:text-4xl text-white tabular-nums tracking-tight filter drop-shadow-md">
+          <div className={`font-heading font-black text-3xl sm:text-4xl text-white tabular-nums tracking-tight filter drop-shadow-md ${isTargetMet && floorSeconds > 0 ? 'text-glow-emerald' : ''}`}>
             {hrs}:{mins}
             <span className="text-xl sm:text-2xl text-slate-400 font-mono font-normal">:{secs}</span>
           </div>

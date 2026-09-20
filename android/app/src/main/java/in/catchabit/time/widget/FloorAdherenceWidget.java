@@ -13,6 +13,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
+import android.view.View;
 
 import org.json.JSONObject;
 
@@ -77,25 +78,26 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
         int badgeBg = R.drawable.widget_badge_ready;
         int statusColor = Color.parseColor("#A78BFA");
         String breakButtonText = "☕ Break";
-        String targetText = "Target: 7.0h floor quota";
+        String targetHours = prefs.getString("today_target_hours", "7.0");
+        String targetText = "Target: " + targetHours + "h floor quota";
 
         if ("active".equals(status)) {
             displayStatus = "● ON FLOOR";
             badgeBg = R.drawable.widget_badge_green;
             statusColor = Color.parseColor("#10B981");
             breakButtonText = "☕ Break";
-            targetText = isWeekendToday ? "Target: 0.0h (Bonus Adherence)" : "Target: 7.0h floor quota";
+            targetText = isWeekendToday ? "Target: 0.0h (Bonus Adherence)" : "Target: " + targetHours + "h floor quota";
         } else if ("on_break".equals(status)) {
             displayStatus = "☕ ON BREAK";
             badgeBg = R.drawable.widget_badge_amber;
             statusColor = Color.parseColor("#F59E0B");
             breakButtonText = "▶️ Resume";
-            targetText = isWeekendToday ? "Target: 0.0h (Bonus Adherence)" : "Target: 7.0h floor quota";
+            targetText = isWeekendToday ? "Target: 0.0h (Bonus Adherence)" : "Target: " + targetHours + "h floor quota";
         } else if ("completed".equals(status)) {
             displayStatus = "✓ CHECKED OUT";
             badgeBg = R.drawable.widget_badge_indigo;
             statusColor = Color.parseColor("#818CF8");
-            targetText = isWeekendToday ? "Target: 0.0h (Bonus Adherence)" : "Target: 7.0h floor quota";
+            targetText = isWeekendToday ? "Target: 0.0h (Bonus Adherence)" : "Target: " + targetHours + "h floor quota";
         } else if ("wfh".equals(status)) {
             displayStatus = "🏠 WFH";
             badgeBg = R.drawable.widget_badge_cyan;
@@ -143,6 +145,12 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
         }
 
         views.setTextViewText(R.id.tv_widget_synced, "Synced: " + syncTime);
+        
+        int floorSec = 0;
+        try { floorSec = Integer.parseInt(prefs.getString("today_floor_seconds", "0")); } catch (Exception ignored) {}
+        int targetSec = (int)(Double.parseDouble(prefs.getString("today_target_hours", "7.0")) * 3600);
+        int progressPercent = targetSec > 0 ? Math.min(100, (int)((floorSec * 100L) / targetSec)) : (floorSec > 0 ? 100 : 0);
+        views.setProgressBar(R.id.progress_floor, 100, progressPercent, false);
 
         // Buttons styling: Disable completely when Weekend, WFH, or Leave
         if (isExemptedState) {
@@ -157,6 +165,11 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
             views.setTextViewText(R.id.btn_check_in, "⚡ Off");
             views.setTextViewText(R.id.btn_break, "☕ Off");
             views.setTextViewText(R.id.btn_check_out, "🚪 Off");
+
+            views.setViewVisibility(R.id.btn_check_in, View.VISIBLE);
+            views.setViewVisibility(R.id.btn_break, View.VISIBLE);
+            views.setViewVisibility(R.id.btn_check_out, View.VISIBLE);
+            views.setViewVisibility(R.id.tv_completed_state, View.GONE);
         } else {
             views.setInt(R.id.btn_check_in, "setBackgroundResource", R.drawable.widget_btn_primary);
             views.setTextColor(R.id.btn_check_in, Color.parseColor("#FFFFFF"));
@@ -169,6 +182,25 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
             views.setInt(R.id.btn_check_out, "setBackgroundResource", R.drawable.widget_btn_slate);
             views.setTextColor(R.id.btn_check_out, Color.parseColor("#F1F5F9"));
             views.setTextViewText(R.id.btn_check_out, "🚪 Check Out");
+
+            if ("completed".equals(status)) {
+                views.setViewVisibility(R.id.btn_check_in, View.GONE);
+                views.setViewVisibility(R.id.btn_break, View.GONE);
+                views.setViewVisibility(R.id.btn_check_out, View.GONE);
+                views.setViewVisibility(R.id.tv_completed_state, View.VISIBLE);
+                views.setTextViewText(R.id.tv_completed_state, "✓ Done for today — " + floorHours + "h logged");
+                views.setTextViewText(R.id.tv_widget_subtext, "✓ Done for today — " + floorHours + "h logged");
+            } else if ("active".equals(status) || "on_break".equals(status)) {
+                views.setViewVisibility(R.id.btn_check_in, View.GONE);
+                views.setViewVisibility(R.id.btn_break, View.VISIBLE);
+                views.setViewVisibility(R.id.btn_check_out, View.VISIBLE);
+                views.setViewVisibility(R.id.tv_completed_state, View.GONE);
+            } else {
+                views.setViewVisibility(R.id.btn_check_in, View.VISIBLE);
+                views.setViewVisibility(R.id.btn_break, View.GONE);
+                views.setViewVisibility(R.id.btn_check_out, View.GONE);
+                views.setViewVisibility(R.id.tv_completed_state, View.GONE);
+            }
         }
 
         // Click on Header / Root opens the main app
@@ -347,7 +379,8 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
             String shortfallFormatted = String.format(Locale.US, "%.2f", shortfallHours);
             String syncFormatted = new SimpleDateFormat("hh:mm a", Locale.US).format(new Date());
 
-            String subtext = isWeekend ? "Weekend — Quota Exempted" : ("wfh".equals(workMode) ? "WFH — Quota Exempted" : (isLeave ? "Leave — Quota Exempted" : "Target: 7.0h daily quota"));
+            String targetHoursStr = prefs.getString("today_target_hours", "7.0");
+            String subtext = isWeekend ? "Weekend — Quota Exempted" : ("wfh".equals(workMode) ? "WFH — Quota Exempted" : (isLeave ? "Leave — Quota Exempted" : "Target: " + targetHoursStr + "h daily quota"));
 
             SharedPreferences.Editor editor = prefs.edit();
             editor.putString("today_status", status);
@@ -374,75 +407,97 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
     private static String makeApiPost(String urlStr, String jsonBody, String token) throws Exception {
         URL url = new URL(urlStr);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "application/json");
-        conn.setRequestProperty("Authorization", "Bearer " + token);
-        conn.setConnectTimeout(8000);
-        conn.setReadTimeout(8000);
-        conn.setDoOutput(true);
+        try {
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+            conn.setConnectTimeout(8000);
+            conn.setReadTimeout(8000);
+            conn.setDoOutput(true);
 
-        try (OutputStream os = conn.getOutputStream()) {
-            os.write(jsonBody.getBytes("utf-8"));
-        }
-
-        int code = conn.getResponseCode();
-        InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is, "utf-8"));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
-        }
-        reader.close();
-        conn.disconnect();
-
-        if (code >= 400) {
-            try {
-                JSONObject errObj = new JSONObject(sb.toString());
-                String msg = errObj.optString("error", "Error " + code);
-                throw new Exception(msg);
-            } catch (Exception jsonErr) {
-                if (jsonErr.getMessage() != null && !jsonErr.getMessage().startsWith("Value")) {
-                    throw jsonErr;
-                }
-                throw new Exception("Server error " + code + ": " + sb.toString());
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(jsonBody.getBytes("utf-8"));
             }
+
+            int code = conn.getResponseCode();
+            InputStream is;
+            if (code >= 200 && code < 300) {
+                is = conn.getInputStream();
+            } else {
+                is = conn.getErrorStream();
+                if (is == null) {
+                    throw new Exception("Server error " + code);
+                }
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is, "utf-8"));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            reader.close();
+
+            if (code >= 400) {
+                try {
+                    JSONObject errObj = new JSONObject(sb.toString());
+                    String msg = errObj.optString("error", "Error " + code);
+                    throw new Exception(msg);
+                } catch (Exception jsonErr) {
+                    if (jsonErr.getMessage() != null && !jsonErr.getMessage().startsWith("Value")) {
+                        throw jsonErr;
+                    }
+                    throw new Exception("Server error " + code + ": " + sb.toString());
+                }
+            }
+            return sb.toString();
+        } finally {
+            conn.disconnect();
         }
-        return sb.toString();
     }
 
     private static String makeApiGet(String urlStr, String token) throws Exception {
         URL url = new URL(urlStr);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.setRequestProperty("Content-Type", "application/json");
-        conn.setRequestProperty("Authorization", "Bearer " + token);
-        conn.setConnectTimeout(8000);
-        conn.setReadTimeout(8000);
+        try {
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + token);
+            conn.setConnectTimeout(8000);
+            conn.setReadTimeout(8000);
 
-        int code = conn.getResponseCode();
-        InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is, "utf-8"));
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
-        }
-        reader.close();
-        conn.disconnect();
-
-        if (code >= 400) {
-            try {
-                JSONObject errObj = new JSONObject(sb.toString());
-                String msg = errObj.optString("error", "Error " + code);
-                throw new Exception(msg);
-            } catch (Exception jsonErr) {
-                if (jsonErr.getMessage() != null && !jsonErr.getMessage().startsWith("Value")) {
-                    throw jsonErr;
+            int code = conn.getResponseCode();
+            InputStream is;
+            if (code >= 200 && code < 300) {
+                is = conn.getInputStream();
+            } else {
+                is = conn.getErrorStream();
+                if (is == null) {
+                    throw new Exception("Server error " + code);
                 }
-                throw new Exception("Server error " + code);
             }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is, "utf-8"));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            reader.close();
+
+            if (code >= 400) {
+                try {
+                    JSONObject errObj = new JSONObject(sb.toString());
+                    String msg = errObj.optString("error", "Error " + code);
+                    throw new Exception(msg);
+                } catch (Exception jsonErr) {
+                    if (jsonErr.getMessage() != null && !jsonErr.getMessage().startsWith("Value")) {
+                        throw jsonErr;
+                    }
+                    throw new Exception("Server error " + code);
+                }
+            }
+            return sb.toString();
+        } finally {
+            conn.disconnect();
         }
-        return sb.toString();
     }
 }

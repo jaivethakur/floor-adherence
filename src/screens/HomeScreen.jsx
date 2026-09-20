@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import confetti from 'canvas-confetti';
 import {
   LogIn,
   LogOut,
@@ -42,6 +43,7 @@ export default function HomeScreen({ onNavigateHistory }) {
 
   const [showUniversalEditor, setShowUniversalEditor] = useState(false);
   const [shortcutFeedback, setShortcutFeedback] = useState(null);
+  const [confettiFired, setConfettiFired] = useState(false);
 
   const session = todayData?.session;
   const breaks = todayData?.breaks || [];
@@ -98,6 +100,19 @@ export default function HomeScreen({ onNavigateHistory }) {
     }
   }, [shortcutFeedback]);
 
+  // Confetti celebration when 7h target is met
+  useEffect(() => {
+    if (!confettiFired && !isExempted && !isWeekend && liveFloorSeconds >= targetHours * 3600 && targetHours > 0 && status === 'active') {
+      setConfettiFired(true);
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#6366f1', '#10b981', '#f59e0b', '#818cf8'],
+      });
+    }
+  }, [liveFloorSeconds, targetHours, confettiFired, isExempted, isWeekend, status]);
+
   const formatISTTime = (iso) => {
     if (!iso) return '';
     return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -109,7 +124,7 @@ export default function HomeScreen({ onNavigateHistory }) {
   const shortfallHours = Math.max(0, targetHours - parseFloat(floorHoursDecimal)).toFixed(2);
 
   return (
-    <div className="space-y-4 animate-fade-in pb-32 text-xs">
+    <div className="space-y-4 animate-fade-in pb-safe-nav text-sm">
       {/* Top Welcome Bar */}
       <div className="flex items-center justify-between">
         <div>
@@ -276,46 +291,46 @@ export default function HomeScreen({ onNavigateHistory }) {
           <div className="grid grid-cols-4 gap-1.5 p-2 glass-panel border border-white/10 rounded-2xl shadow-glass text-center">
             {/* 1. Floor Time */}
             <div className="p-2 rounded-xl bg-white/[0.03]">
-              <span className="text-slate-400 text-[9px] block font-semibold uppercase tracking-wider">
+              <span className="text-slate-400 text-[11px] block font-semibold uppercase tracking-wider">
                 Floor
               </span>
               <span className="font-heading font-black text-base sm:text-lg text-white font-mono tabular-nums">
                 {floorHoursDecimal}h
               </span>
-              <span className="text-[9px] text-indigo-300 block font-medium">
+              <span className="text-[11px] text-indigo-300 block font-medium">
                 {Math.floor(liveFloorSeconds / 60)}m
               </span>
             </div>
 
             {/* 2. Breaks */}
             <div className="p-2 rounded-xl bg-white/[0.03]">
-              <span className="text-slate-400 text-[9px] block font-semibold uppercase tracking-wider">
+              <span className="text-slate-400 text-[11px] block font-semibold uppercase tracking-wider">
                 Breaks
               </span>
               <span className="font-heading font-black text-base sm:text-lg text-amber-400 font-mono tabular-nums">
                 {breakMinutes}m
               </span>
-              <span className="text-[9px] text-slate-400 block font-medium">
+              <span className="text-[11px] text-slate-400 block font-medium">
                 {breaks.length} logged
               </span>
             </div>
 
             {/* 3. Target Quota */}
             <div className="p-2 rounded-xl bg-white/[0.03]">
-              <span className="text-slate-400 text-[9px] block font-semibold uppercase tracking-wider">
+              <span className="text-slate-400 text-[11px] block font-semibold uppercase tracking-wider">
                 Target
               </span>
               <span className="font-heading font-black text-base sm:text-lg text-sky-400 font-mono tabular-nums">
                 {targetHours.toFixed(1)}h
               </span>
-              <span className="text-[9px] text-slate-400 block font-medium">
+              <span className="text-[11px] text-slate-400 block font-medium">
                 {isWeekend ? 'Exempt' : 'Goal'}
               </span>
             </div>
 
             {/* 4. Shortfall / Pace */}
             <div className="p-2 rounded-xl bg-white/[0.03]">
-              <span className="text-slate-400 text-[9px] block font-semibold uppercase tracking-wider">
+              <span className="text-slate-400 text-[11px] block font-semibold uppercase tracking-wider">
                 {isWeekend ? 'Bonus' : 'Status'}
               </span>
               {isWeekend ? (
@@ -323,21 +338,21 @@ export default function HomeScreen({ onNavigateHistory }) {
                   <span className="font-heading font-black text-base sm:text-lg text-emerald-400 font-mono tabular-nums">
                     +{floorHoursDecimal}h
                   </span>
-                  <span className="text-[9px] text-emerald-400/80 block font-medium">Extra</span>
+                  <span className="text-[11px] text-emerald-400/80 block font-medium">Extra</span>
                 </>
               ) : parseFloat(shortfallHours) <= 0 ? (
                 <>
                   <span className="font-heading font-black text-base sm:text-lg text-emerald-400 font-mono tabular-nums">
                     0.0h
                   </span>
-                  <span className="text-[9px] text-emerald-400 block font-semibold">✓ Met</span>
+                  <span className="text-[11px] text-emerald-400 block font-semibold">✓ Met</span>
                 </>
               ) : (
                 <>
                   <span className="font-heading font-black text-base sm:text-lg text-amber-400 font-mono tabular-nums">
                     {shortfallHours}h
                   </span>
-                  <span className="text-[9px] text-amber-400/80 block font-medium">Short</span>
+                  <span className="text-[11px] text-amber-400/80 block font-medium">Short</span>
                 </>
               )}
             </div>

@@ -76,14 +76,14 @@ export default function SettingsScreen() {
   };
 
   return (
-    <div className="space-y-4 animate-fade-in pb-12 text-xs">
+    <div className="space-y-4 animate-fade-in pb-32 text-xs">
       <div>
         <h2 className="font-heading font-extrabold text-xl text-white">App Settings</h2>
         <p className="text-slate-400">Target hours, working schedule & auto-checkout</p>
       </div>
 
-      <form onSubmit={handleSave} className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-xl">
-        <h3 className="font-heading font-bold text-white text-sm pb-2 border-b border-slate-800">
+      <form onSubmit={handleSave} className="glass-panel rounded-3xl p-5 space-y-4 shadow-glass border border-white/10">
+        <h3 className="font-heading font-bold text-white text-sm pb-2 border-b border-white/10">
           Work Hours & Rules
         </h3>
 
@@ -111,7 +111,7 @@ export default function SettingsScreen() {
             max="12"
             value={settings.daily_target_hours}
             onChange={(e) => setSettings({ ...settings, daily_target_hours: parseFloat(e.target.value) || 7 })}
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-mono"
+            className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2.5 text-white font-mono backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
           />
           <p className="text-[10px] text-slate-400 mt-1">Standard: 7 hours per working day</p>
         </div>
@@ -124,7 +124,7 @@ export default function SettingsScreen() {
             type="time"
             value={settings.auto_checkout_time}
             onChange={(e) => setSettings({ ...settings, auto_checkout_time: e.target.value })}
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-white font-mono"
+            className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2.5 text-white font-mono backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
           />
           <p className="text-[10px] text-slate-400 mt-1">Daily system cron closes unclosed sessions at this time</p>
         </div>
@@ -133,7 +133,7 @@ export default function SettingsScreen() {
           <label className="block text-slate-300 font-semibold mb-2">
             Weekly Working Days
           </label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-7 gap-2">
             {daysList.map((day) => {
               const active = settings.work_days.includes(day);
               return (
@@ -144,7 +144,7 @@ export default function SettingsScreen() {
                   className={`py-2 rounded-xl text-xs font-semibold border transition-all ${
                     active
                       ? 'bg-indigo-600 text-white border-indigo-500'
-                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                      : 'bg-white/[0.04] text-slate-400 border-white/10'
                   }`}
                 >
                   {day}
@@ -165,7 +165,7 @@ export default function SettingsScreen() {
       </form>
 
       {/* Auto Checkout Manual Test */}
-      <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-5 space-y-3 shadow-xl">
+      <div className="glass-panel rounded-3xl p-5 space-y-3 shadow-glass border border-white/10">
         <h3 className="font-heading font-bold text-white text-sm">
           Run 8 PM Auto-Checkout Now
         </h3>
@@ -184,7 +184,7 @@ export default function SettingsScreen() {
         </button>
 
         {cronResult && (
-          <div className="p-3 bg-slate-800/80 rounded-xl font-mono text-[11px] text-slate-300 border border-slate-700">
+          <div className="p-3 glass-pill rounded-xl font-mono text-[11px] text-slate-300 border border-white/10">
             <pre className="whitespace-pre-wrap">{JSON.stringify(cronResult, null, 2)}</pre>
           </div>
         )}

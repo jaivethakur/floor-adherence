@@ -135,7 +135,7 @@ export default function UniversalDayEditorModal({
       {
         id: 'new_' + Math.random().toString(36).substring(2, 8),
         start: '13:00',
-        end: '13:45',
+        end: checkOutTime ? '13:45' : '',
       },
     ]);
   };
@@ -483,13 +483,29 @@ export default function UniversalDayEditorModal({
                           </div>
 
                           <div>
-                            <span className="text-[9px] text-slate-400 block">End</span>
-                            <input
-                              type="time"
-                              value={b.end}
-                              onChange={(e) => handleBreakChange(idx, 'end', e.target.value)}
-                              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-slate-100 font-mono text-xs focus:outline-none"
-                            />
+                            <div className="flex justify-between items-center">
+                              <span className="text-[9px] text-slate-400 block">End</span>
+                              {!checkOutTime && b.end && (
+                                <button type="button" onClick={() => handleBreakChange(idx, 'end', '')} className="text-[8px] text-amber-400/80 hover:text-amber-400">Clear</button>
+                              )}
+                            </div>
+                            {!checkOutTime && !b.end ? (
+                              <input
+                                type="text"
+                                value=""
+                                placeholder="Ongoing"
+                                onFocus={(e) => e.target.type = 'time'}
+                                onChange={(e) => handleBreakChange(idx, 'end', e.target.value)}
+                                className="w-full bg-slate-800/50 border border-amber-500/30 rounded-lg px-2 py-1 text-amber-400 font-mono text-xs focus:outline-none placeholder:text-amber-400/70"
+                              />
+                            ) : (
+                              <input
+                                type="time"
+                                value={b.end || ''}
+                                onChange={(e) => handleBreakChange(idx, 'end', e.target.value)}
+                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-slate-100 font-mono text-xs focus:outline-none"
+                              />
+                            )}
                           </div>
                         </div>
 

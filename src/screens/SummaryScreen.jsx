@@ -87,7 +87,7 @@ export default function SummaryScreen() {
   const strokeDashoffset = circumference - (gaugePercent / 100) * circumference;
 
   return (
-    <div className="space-y-4 animate-fade-in pb-32 text-xs">
+    <div className="space-y-4 animate-fade-in pb-safe-nav text-sm">
       {/* Month Navigation Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -140,11 +140,14 @@ export default function SummaryScreen() {
       )}
 
       {loading ? (
-        <div className="py-16 text-center space-y-3">
-          <div className="w-10 h-10 rounded-2xl glass-panel border border-indigo-500/30 flex items-center justify-center mx-auto animate-spin text-indigo-400">
-            <RotateCw className="w-5 h-5" />
+        <div className="space-y-4">
+          <div className="h-48 glass-panel rounded-3xl border border-white/10 animate-pulse" />
+          <div className="grid grid-cols-3 gap-2">
+            <div className="h-24 glass-panel rounded-3xl border border-white/10 animate-pulse" />
+            <div className="h-24 glass-panel rounded-3xl border border-white/10 animate-pulse" />
+            <div className="h-24 glass-panel rounded-3xl border border-white/10 animate-pulse" />
           </div>
-          <p className="text-slate-400 text-xs font-medium">Calculating floor adherence metrics...</p>
+          <div className="h-56 glass-panel rounded-3xl border border-white/10 animate-pulse" />
         </div>
       ) : metrics ? (
         <>
@@ -363,7 +366,7 @@ export default function SummaryScreen() {
                       key={d.date}
                       onMouseEnter={() => setHoveredBar(d)}
                       onClick={() => setHoveredBar(d)}
-                      className="flex flex-col items-center flex-1 min-w-[10px] h-full justify-end group cursor-pointer"
+                      className="flex flex-col items-center flex-1 min-w-[12px] h-full justify-end group cursor-pointer"
                     >
                       <div
                         style={{ height: `${isLeave ? 25 : isWFH ? 15 : (d.isWorkingDay ? Math.max(6, heightPercent) : (d.floorHours > 0 ? Math.max(6, heightPercent) : 4))}%` }}

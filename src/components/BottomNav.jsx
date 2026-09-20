@@ -36,7 +36,7 @@ export default function BottomNav({ activeTab, onChangeTab }) {
                 />
               </div>
               <span
-                className={`text-[10px] mt-0.5 font-heading tracking-tight transition-all duration-200 ${
+                className={`text-[11px] mt-0.5 font-heading tracking-tight transition-all duration-200 ${
                   isActive ? 'text-white font-bold' : 'text-slate-400 font-medium'
                 }`}
               >
