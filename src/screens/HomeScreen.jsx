@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import confetti from 'canvas-confetti';
 import {
   LogIn,
   LogOut,
@@ -56,6 +55,16 @@ export default function HomeScreen({ onNavigateHistory }) {
     : (isWeekend ? 'weekend' : 'not_checked_in')));
   const isAutoCheckout = Boolean(session?.is_auto_checkout);
 
+  const formatISTTime = (iso) => {
+    if (!iso) return '';
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const targetHours = isWeekend || isExempted ? 0 : (todayData?.settings?.dailyTargetHours || 7);
+  const floorHoursDecimal = (liveFloorSeconds / 3600).toFixed(2);
+  const breakMinutes = Math.floor(liveBreakSeconds / 60);
+  const shortfallHours = Math.max(0, targetHours - parseFloat(floorHoursDecimal)).toFixed(2);
+
   // Deep Link Shortcut Handling (?action=checkin|break|checkout)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -104,24 +113,19 @@ export default function HomeScreen({ onNavigateHistory }) {
   useEffect(() => {
     if (!confettiFired && !isExempted && !isWeekend && liveFloorSeconds >= targetHours * 3600 && targetHours > 0 && status === 'active') {
       setConfettiFired(true);
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#6366f1', '#10b981', '#f59e0b', '#818cf8'],
+      import('canvas-confetti').then((m) => {
+        const confettiFn = m.default || m;
+        confettiFn({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#6366f1', '#10b981', '#f59e0b', '#818cf8'],
+        });
+      }).catch((e) => {
+        console.warn('Confetti effect unavailable:', e);
       });
     }
   }, [liveFloorSeconds, targetHours, confettiFired, isExempted, isWeekend, status]);
-
-  const formatISTTime = (iso) => {
-    if (!iso) return '';
-    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const targetHours = isWeekend || isExempted ? 0 : (todayData?.settings?.dailyTargetHours || 7);
-  const floorHoursDecimal = (liveFloorSeconds / 3600).toFixed(2);
-  const breakMinutes = Math.floor(liveBreakSeconds / 60);
-  const shortfallHours = Math.max(0, targetHours - parseFloat(floorHoursDecimal)).toFixed(2);
 
   return (
     <div className="space-y-4 animate-fade-in pb-safe-nav text-sm">

@@ -88,10 +88,50 @@ function MainLayout() {
   );
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('App runtime error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-950 text-slate-100 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl glass-panel border border-rose-500/40 flex items-center justify-center text-rose-400 text-2xl">
+            ⚠️
+          </div>
+          <h2 className="font-heading font-bold text-xl text-white">Something went wrong</h2>
+          <p className="text-slate-400 text-xs max-w-sm">
+            {this.state.error?.message || 'An unexpected display error occurred.'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all active-scale"
+          >
+            Reload Application
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <AuthProvider>
-      <MainLayout />
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <MainLayout />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
