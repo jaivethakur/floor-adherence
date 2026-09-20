@@ -13,6 +13,9 @@ import {
   CalendarDays,
   CheckCircle2,
   Sparkles,
+  Target,
+  TrendingUp,
+  Clock,
 } from 'lucide-react';
 import { useAttendance } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
@@ -129,27 +132,34 @@ export default function HomeScreen({ onNavigateHistory }) {
 
   return (
     <div className="space-y-4 animate-fade-in pb-safe-nav text-sm">
-      {/* Top Welcome Bar */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-heading font-extrabold text-xl text-white flex items-center space-x-2">
-            <span>Hi, {user?.name?.split(' ')[0]}</span>
-            <span className="inline-block animate-wave">👋</span>
-          </h2>
-          <div className="flex items-center space-x-2 text-slate-400 text-[11px] font-medium mt-0.5">
-            <span className="text-slate-300">{todayData?.workDate || 'Today'}</span>
-            <span>•</span>
-            <span className={isWeekend ? 'text-amber-300 font-bold' : 'text-slate-300'}>
-              {todayData?.dayOfWeek || 'Today'} {isWeekend && '🌴 Weekend'}
+      {/* Executive Welcome Bar */}
+      <div className="flex items-center justify-between p-3.5 glass-panel-elevated rounded-3xl border border-white/10 shadow-glass">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-600/30 ring-1 ring-white/20">
+            <span className="font-heading font-black text-white text-base">
+              {user?.name?.[0]?.toUpperCase() || 'U'}
             </span>
+          </div>
+          <div>
+            <h2 className="font-heading font-black text-base text-white flex items-center space-x-1.5">
+              <span>{user?.name?.split(' ')[0] || 'Hello'}</span>
+              <span className="inline-block animate-wave text-base">👋</span>
+            </h2>
+            <div className="flex items-center space-x-1.5 text-slate-400 text-[11px] font-medium">
+              <span className="text-slate-300">{todayData?.workDate || 'Today'}</span>
+              <span>•</span>
+              <span className={isWeekend ? 'text-amber-300 font-bold' : 'text-slate-300'}>
+                {todayData?.dayOfWeek || 'Today'} {isWeekend && '🌴 Weekend'}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5">
           {/* Direct Edit Button */}
           <button
             onClick={() => setShowUniversalEditor(true)}
-            className="py-2 px-3 rounded-2xl glass-pill text-indigo-300 hover:text-white hover:bg-white/10 active-scale transition-all flex items-center space-x-1.5 border border-indigo-500/30 shadow-glass"
+            className="py-2 px-3 rounded-xl glass-pill text-indigo-300 hover:text-white hover:bg-white/10 active-scale transition-all flex items-center space-x-1.5 border border-indigo-500/30 shadow-glass"
             title="Adjust / Log Hours"
           >
             <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
@@ -160,7 +170,7 @@ export default function HomeScreen({ onNavigateHistory }) {
           <button
             onClick={refreshToday}
             disabled={loading}
-            className="p-2 rounded-2xl glass-pill text-slate-400 hover:text-white active-scale transition-all border border-white/10 shadow-glass"
+            className="p-2 rounded-xl glass-pill text-slate-400 hover:text-white active-scale transition-all border border-white/10 shadow-glass"
             title="Refresh Data"
           >
             <RotateCw className={`w-4 h-4 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
@@ -291,74 +301,124 @@ export default function HomeScreen({ onNavigateHistory }) {
             isAutoCheckout={isAutoCheckout}
           />
 
-          {/* Sleek 1-Row Frosted Telemetry Dock */}
-          <div className="grid grid-cols-4 gap-1.5 p-2 glass-panel border border-white/10 rounded-2xl shadow-glass text-center">
-            {/* 1. Floor Time */}
-            <div className="p-2 rounded-xl bg-white/[0.03]">
-              <span className="text-slate-400 text-[11px] block font-semibold uppercase tracking-wider">
-                Floor
-              </span>
-              <span className="font-heading font-black text-base sm:text-lg text-white font-mono tabular-nums">
-                {floorHoursDecimal}h
-              </span>
-              <span className="text-[11px] text-indigo-300 block font-medium">
-                {Math.floor(liveFloorSeconds / 60)}m
+          {/* Executive 2x2 Telemetry Deck */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* 1. Floor Time Card */}
+            <div className="p-4 glass-panel-elevated border border-emerald-500/30 rounded-3xl shadow-glass relative overflow-hidden group">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center space-x-1.5">
+                  <Building2 className="w-4 h-4 text-emerald-400" />
+                  <span>Floor Time</span>
+                </span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold">
+                  {Math.floor(liveFloorSeconds / 60)}m
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-1">
+                <span className="font-heading font-black text-3xl text-white font-mono tabular-nums">
+                  {floorHoursDecimal}
+                </span>
+                <span className="text-xs text-slate-400 font-bold">hrs</span>
+              </div>
+              <div className="w-full bg-white/10 rounded-full h-1.5 mt-3 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, Math.round((liveFloorSeconds / (targetHours * 3600 || 1)) * 100))}%` }}
+                />
+              </div>
+            </div>
+
+            {/* 2. Breaks Card */}
+            <div className="p-4 glass-panel-elevated border border-amber-500/30 rounded-3xl shadow-glass relative overflow-hidden">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center space-x-1.5">
+                  <Coffee className="w-4 h-4 text-amber-400" />
+                  <span>Breaks</span>
+                </span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-semibold">
+                  {breaks.length} taken
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-1">
+                <span className="font-heading font-black text-3xl text-amber-300 font-mono tabular-nums">
+                  {breakMinutes}
+                </span>
+                <span className="text-xs text-slate-400 font-bold">mins</span>
+              </div>
+              <div className="w-full bg-white/10 rounded-full h-1.5 mt-3 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-amber-500 to-yellow-400 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, (breakMinutes / 60) * 100)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* 3. Target Quota Card */}
+            <div className="p-4 glass-panel-elevated border border-sky-500/30 rounded-3xl shadow-glass relative overflow-hidden">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center space-x-1.5">
+                  <Target className="w-4 h-4 text-sky-400" />
+                  <span>Target</span>
+                </span>
+                <span className="text-[11px] font-mono text-slate-400 font-semibold">
+                  {isWeekend ? 'Exempt' : 'Goal'}
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-1">
+                <span className="font-heading font-black text-3xl text-sky-300 font-mono tabular-nums">
+                  {targetHours.toFixed(1)}
+                </span>
+                <span className="text-xs text-slate-400 font-bold">hrs</span>
+              </div>
+              <span className="text-[11px] text-slate-400 mt-2.5 block font-medium">
+                {isWeekend ? '0h quota on weekend' : '7.0h required floor time'}
               </span>
             </div>
 
-            {/* 2. Breaks */}
-            <div className="p-2 rounded-xl bg-white/[0.03]">
-              <span className="text-slate-400 text-[11px] block font-semibold uppercase tracking-wider">
-                Breaks
-              </span>
-              <span className="font-heading font-black text-base sm:text-lg text-amber-400 font-mono tabular-nums">
-                {breakMinutes}m
-              </span>
-              <span className="text-[11px] text-slate-400 block font-medium">
-                {breaks.length} logged
-              </span>
-            </div>
-
-            {/* 3. Target Quota */}
-            <div className="p-2 rounded-xl bg-white/[0.03]">
-              <span className="text-slate-400 text-[11px] block font-semibold uppercase tracking-wider">
-                Target
-              </span>
-              <span className="font-heading font-black text-base sm:text-lg text-sky-400 font-mono tabular-nums">
-                {targetHours.toFixed(1)}h
-              </span>
-              <span className="text-[11px] text-slate-400 block font-medium">
-                {isWeekend ? 'Exempt' : 'Goal'}
-              </span>
-            </div>
-
-            {/* 4. Shortfall / Pace */}
-            <div className="p-2 rounded-xl bg-white/[0.03]">
-              <span className="text-slate-400 text-[11px] block font-semibold uppercase tracking-wider">
-                {isWeekend ? 'Bonus' : 'Status'}
-              </span>
-              {isWeekend ? (
-                <>
-                  <span className="font-heading font-black text-base sm:text-lg text-emerald-400 font-mono tabular-nums">
-                    +{floorHoursDecimal}h
+            {/* 4. Shortfall / Pace Card */}
+            <div className={`p-4 glass-panel-elevated rounded-3xl shadow-glass relative overflow-hidden border ${
+              isWeekend || parseFloat(shortfallHours) <= 0
+                ? 'border-emerald-500/40 bg-emerald-500/[0.04]'
+                : 'border-rose-500/40 bg-rose-500/[0.04]'
+            }`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider flex items-center space-x-1.5">
+                  {isWeekend || parseFloat(shortfallHours) <= 0 ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  ) : (
+                    <TrendingUp className="w-4 h-4 text-rose-400" />
+                  )}
+                  <span>{isWeekend ? 'Bonus' : parseFloat(shortfallHours) <= 0 ? 'Goal Met' : 'Shortfall'}</span>
+                </span>
+              </div>
+              <div className="flex items-baseline space-x-1">
+                {isWeekend ? (
+                  <>
+                    <span className="font-heading font-black text-3xl text-emerald-400 font-mono tabular-nums">
+                      +{floorHoursDecimal}
+                    </span>
+                    <span className="text-xs text-slate-400 font-bold">hrs</span>
+                  </>
+                ) : parseFloat(shortfallHours) <= 0 ? (
+                  <span className="font-heading font-black text-2xl text-emerald-400">
+                    Goal Met!
                   </span>
-                  <span className="text-[11px] text-emerald-400/80 block font-medium">Extra</span>
-                </>
-              ) : parseFloat(shortfallHours) <= 0 ? (
-                <>
-                  <span className="font-heading font-black text-base sm:text-lg text-emerald-400 font-mono tabular-nums">
-                    0.0h
-                  </span>
-                  <span className="text-[11px] text-emerald-400 block font-semibold">✓ Met</span>
-                </>
-              ) : (
-                <>
-                  <span className="font-heading font-black text-base sm:text-lg text-amber-400 font-mono tabular-nums">
-                    {shortfallHours}h
-                  </span>
-                  <span className="text-[11px] text-amber-400/80 block font-medium">Short</span>
-                </>
-              )}
+                ) : (
+                  <>
+                    <span className="font-heading font-black text-3xl text-rose-400 font-mono tabular-nums">
+                      {shortfallHours}
+                    </span>
+                    <span className="text-xs text-slate-400 font-bold">hrs left</span>
+                  </>
+                )}
+              </div>
+              <span className="text-[11px] text-slate-400 mt-2.5 block font-medium">
+                {isWeekend
+                  ? 'Bonus toward monthly average'
+                  : parseFloat(shortfallHours) <= 0
+                  ? 'All 7.0 hours fulfilled'
+                  : `Need ${shortfallHours}h more today`}
+              </span>
             </div>
           </div>
 

@@ -169,6 +169,7 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
             views.setViewVisibility(R.id.btn_check_in, View.VISIBLE);
             views.setViewVisibility(R.id.btn_break, View.VISIBLE);
             views.setViewVisibility(R.id.btn_check_out, View.VISIBLE);
+            views.setViewVisibility(R.id.btn_container, View.VISIBLE);
             views.setViewVisibility(R.id.tv_completed_state, View.GONE);
         } else {
             views.setInt(R.id.btn_check_in, "setBackgroundResource", R.drawable.widget_btn_primary);
@@ -184,18 +185,18 @@ public class FloorAdherenceWidget extends AppWidgetProvider {
             views.setTextViewText(R.id.btn_check_out, "🚪 Check Out");
 
             if ("completed".equals(status)) {
-                views.setViewVisibility(R.id.btn_check_in, View.GONE);
-                views.setViewVisibility(R.id.btn_break, View.GONE);
-                views.setViewVisibility(R.id.btn_check_out, View.GONE);
+                views.setViewVisibility(R.id.btn_container, View.GONE);
                 views.setViewVisibility(R.id.tv_completed_state, View.VISIBLE);
                 views.setTextViewText(R.id.tv_completed_state, "✓ Done for today — " + floorHours + "h logged");
                 views.setTextViewText(R.id.tv_widget_subtext, "✓ Done for today — " + floorHours + "h logged");
             } else if ("active".equals(status) || "on_break".equals(status)) {
+                views.setViewVisibility(R.id.btn_container, View.VISIBLE);
                 views.setViewVisibility(R.id.btn_check_in, View.GONE);
                 views.setViewVisibility(R.id.btn_break, View.VISIBLE);
                 views.setViewVisibility(R.id.btn_check_out, View.VISIBLE);
                 views.setViewVisibility(R.id.tv_completed_state, View.GONE);
             } else {
+                views.setViewVisibility(R.id.btn_container, View.VISIBLE);
                 views.setViewVisibility(R.id.btn_check_in, View.VISIBLE);
                 views.setViewVisibility(R.id.btn_break, View.GONE);
                 views.setViewVisibility(R.id.btn_check_out, View.GONE);
